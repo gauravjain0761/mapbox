@@ -282,14 +282,23 @@
 import { View, Text, StyleSheet } from 'react-native';
 import React from 'react';
 import Mapbox from '@rnmapbox/maps';
-Mapbox.setAccessToken('mapbox- pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g');
-
+Mapbox.setAccessToken('pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g')
+Mapbox.setTelemetryEnabled(false)
 
 export default function HomeScreen() {
+  [[]]
   return (
     <View style={styles.page}>
       <View style={styles.container}>
-        <Mapbox.MapView style={styles.map} />
+        <Mapbox.MapView
+          styleURL='mapbox://styles/mapbox/satellite-v9'
+
+          style={styles.map} >
+          <Mapbox.Camera
+            zoomLevel={8}
+
+          />
+        </Mapbox.MapView>
       </View>
     </View>
   );
@@ -302,8 +311,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   container: {
-    height: 300,
-    width: 300,
+    height: '100%',
+    width: '100%',
   },
   map: {
     flex: 1

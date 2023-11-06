@@ -1,4 +1,4 @@
-import {Store} from 'pullstate';
+import { Store } from "pullstate";
 let initialState = {
   isLoggedIn: false,
 };
@@ -8,7 +8,7 @@ type IStore = {
 export const dataStore = new Store<IStore>(initialState);
 
 export function setLoggedIn(data: boolean) {
-  return dataStore.update(s => {
+  return dataStore.update((s) => {
     s.isLoggedIn = data;
   });
 }
