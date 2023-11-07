@@ -179,12 +179,12 @@
 //           //   initialCoordinate={[initialPosition.longitude, initialPosition.latitude]}
 //           //   zoomLevel={15}
 //           // />
-//           //   <MapLibreGL.Marker
+//           //   < L.Marker
 //           //   coordinate={[
 //           //     initialPosition.longitude,
 //           //     initialPosition.latitude,
 //           //   ]}
-//           // ></MapLibreGL.Marker>
+//           // ></>
 //           // Add markers or other map components here */}
 
 //           // <MapView
@@ -279,42 +279,264 @@
 //   },
 // });
 
-import { View, Text, StyleSheet } from 'react-native';
-import React from 'react';
-import Mapbox from '@rnmapbox/maps';
-Mapbox.setAccessToken('pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g')
-Mapbox.setTelemetryEnabled(false)
+import Mapbox, {
+  Camera,
+  LineLayer,
+  MapView,
+  MarkerView,
+  ShapeSource,
+  // MapboxGL
+} from "@rnmapbox/maps";
+import { Button, StyleSheet, View } from "react-native";
+import React, {
+  useState,
+  useRef,
+  ComponentProps,
+  useMemo,
+  forwardRef,
+} from "react";
+import { log } from "console";
+Mapbox.setAccessToken(
+  "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
+);
+Mapbox.setTelemetryEnabled(false);
 
-export default function HomeScreen() {
-  [[]]
+type Position = [number, number];
+
+type CrosshairProps = {
+  size: number;
+  w: number;
+  onLayout: ComponentProps<typeof View>["onLayout"];
+};
+const Crosshair = forwardRef<View, CrosshairProps>(
+  ({ size, w, onLayout }: CrosshairProps, ref) => (
+    <View
+      onLayout={onLayout}
+      ref={ref}
+      style={{
+        width: 2 * size + 1,
+        height: 2 * size + 1,
+      }}
+    >
+      {/* <View
+        style={{
+          position: "absolute",
+          left: size,
+          top: 0,
+          bottom: 0,
+          borderColor: "red",
+          borderWidth: w / 2.0,
+        }}
+      />
+      <View
+        style={{
+          position: "absolute",
+          top: size,
+          left: 0,
+          right: 0,
+          borderColor: "red",
+          borderWidth: w / 2.0,
+        }}
+      /> */}
+    </View>
+  )
+);
+
+const CrosshairOverlay = ({
+  onCenter,
+}: {
+  onCenter: (x: [number, number]) => void;
+}) => {
+  const ref = useRef<View>(null);
+
+  if (ref.current != null) {
+    console.log("=> ref.current", ref.current != null);
+  }
   return (
-    <View style={styles.page}>
-      <View style={styles.container}>
+    <View
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignContent: "center",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      pointerEvents="none"
+    >
+      <Crosshair
+        size={20}
+        w={1.0}
+        ref={ref}
+        onLayout={(e) => {
+          const { x, y, width, height } = e.nativeEvent.layout;
+          onCenter([x + width / 2.0, y + height / 2.0]);
+        }}
+      />
+    </View>
+  );
+};
+
+const lineLayerStyle = {
+  lineColor: "#fff",
+};
+
+const Polygon = ({ coordinates }: { coordinates: Position[] }) => {
+  const features: GeoJSON.FeatureCollection = useMemo(() => {
+    return {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          id: "a-feature",
+          geometry: {
+            type: "LineString",
+            coordinates,
+          },
+          properties: {},
+        } as const,
+      ],
+    };
+  }, [coordinates]);
+  console.log("=> features", JSON.stringify(features));
+  return (
+    <ShapeSource id={"shape-source-id-0"} shape={features}>
+      <LineLayer id={"line-layer"} style={lineLayerStyle} />
+    </ShapeSource>
+  );
+};
+
+const HomeScreen = () => {
+  const [coordinates, setCoordinates] = useState<Position[]>([]);
+  const [lastCoordinate, setLastCoordinate] = useState<Position>([0, 0]);
+  const [started, setStarted] = useState(false);
+  const [crosshairPos, setCrosshairPos] = useState([0, 0]);
+
+  const coordinatesWithLast = useMemo(() => {
+    return [...coordinates, lastCoordinate];
+  }, [coordinates, lastCoordinate]);
+
+  
+  const map = useRef<MapView>(null);
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <Mapbox.MapView
-          styleURL='mapbox://styles/mapbox/satellite-v9'
-
-          style={styles.map} >
+          styleURL="mapbox://styles/mapbox/satellite-v9"
+          ref={map}
+          style={styles.map}
+          onPress={async () => {
+            setStarted(true);
+            setCoordinates([...coordinates, lastCoordinate]);
+          }}
+          onLongPress={() => {
+            setStarted(false);
+          }}
+          onCameraChanged={async (e) => {
+            const crosshairCoords = await map.current?.getCoordinateFromView(
+              crosshairPos
+            );
+            setLastCoordinate(crosshairCoords as Position);
+            if (crosshairCoords && started) {
+              setLastCoordinate(crosshairCoords as Position);
+            }
+          }}
+        >
           <Mapbox.Camera
-            zoomLevel={8}
-
+            defaultSettings={{
+              centerCoordinate: [78.9629, 20.5937],
+              zoomLevel: 12,
+            }}
           />
+          {started && <Polygon coordinates={coordinatesWithLast} />}
+          <MarkerView coordinate={[78.9629, 20.5937]}>
+            <View
+              style={{
+                width: 12,
+                height: 12,
+                backgroundColor: "#fff",
+                borderRadius: 12 / 2,
+                alignItems:'center',
+                justifyContent:'center'
+              }}
+            >
+              <View
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: 5 / 2,
+                  backgroundColor: "#000",
+                }}
+              />
+            </View>
+          </MarkerView>
         </Mapbox.MapView>
+        <CrosshairOverlay onCenter={(c) => setCrosshairPos(c)} />
+
+        {/* <MapView
+          ref={map}
+          style={{ flex: 1 }}
+          onPress={async()=>{
+            setStarted(true);
+            setCoordinates([...coordinates, lastCoordinate])
+          }}
+          onCameraChanged={async (e) => {
+            const crosshairCoords = await map.current?.getCoordinateFromView(
+              crosshairPos,
+            );
+            setLastCoordinate(crosshairCoords as Position);
+            if (crosshairCoords && started) {
+              setLastCoordinate(crosshairCoords as Position);
+            }
+          }}
+        >
+         {started&&  <Polygon coordinates={coordinatesWithLast} />}
+          <Camera
+            defaultSettings={{
+              centerCoordinate: [-73.970895, 40.723279],
+              zoomLevel: 12,
+            }}
+          />
+        </MapView> */}
       </View>
     </View>
   );
-}
+};
+
+HomeScreen.title = "Draw Polyline";
+HomeScreen.tags = [
+  "LineLayer",
+  "ShapeSource",
+  "onCameraChanged",
+  "getCoordinateFromView",
+  "Overlay",
+];
+HomeScreen.docs = `
+# Draw Polyline
+
+This example shows a simple polyline editor. It uses \`onCameraChanged\` to get the center of the map and \`getCoordinateFromView\` 
+to get the coordinates of the crosshair.
+
+The crosshair is an overlay that is positioned using \`onLayout\` and \`getCoordinateFromView\`.
+
+The \`ShapeSource\` is updated with the new coordinates and the \`LineLayer\` is updated with the new coordinates.
+`;
 
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
-    height: '100%',
-    width: '100%',
+    height: "100%",
+    width: "100%",
   },
   map: {
-    flex: 1
-  }
+    flex: 1,
+  },
 });
+
+export default HomeScreen;
