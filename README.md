@@ -2,7 +2,33 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 # Getting Started
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+> **Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+
+## Main setup for ios
+
+First open root directory in terminal
+
+```bash
+cd /
+```
+
+then create .netrc file and open it
+
+```bash
+# create file
+touch ~/.netrc
+
+# open file
+open ~/.netrc
+```
+
+and write following content in this
+
+```bash
+machine api.mapbox.com
+login mapbox
+password YOUR_SECRET_ACCESS_TOKEN
+```
 
 ## Step 1: Start the Metro Server
 
