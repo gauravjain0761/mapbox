@@ -1,9 +1,10 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import TabScreen from '../common/tabs/BottomTabs';
 import { dataStore } from '../globalState/store';
 import PublicRoutes from '../publicScreens/PublicRoutes';
 import SplashScreen from '../splash/SplashScreen';
+import auth from "@react-native-firebase/auth";
 
 export default function AllStack() {
   const Stack = createNativeStackNavigator();
@@ -27,8 +28,23 @@ export default function AllStack() {
   // React.useEffect(() => {
   //   retrieveData();
   // }, []);
+  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState();
 
-  if (!isLoggedIn) return <PublicRoutes />;
+  // Handle user state changes
+  function onAuthStateChanged(user) {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
+  }, []);
+
+  if (initializing) return null;
+  
+  if (!user) return <PublicRoutes />;
   return (
     <>
       <Stack.Navigator

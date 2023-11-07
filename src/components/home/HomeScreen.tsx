@@ -287,15 +287,18 @@ import Mapbox, {
   ShapeSource,
   // MapboxGL
 } from "@rnmapbox/maps";
-import { Button, StyleSheet, View } from "react-native";
+import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React, {
   useState,
   useRef,
   ComponentProps,
   useMemo,
   forwardRef,
+  useEffect,
 } from "react";
-import { log } from "console";
+import auth, { firebase } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+
 Mapbox.setAccessToken(
   "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
 );
@@ -413,13 +416,42 @@ const HomeScreen = () => {
   const [lastCoordinate, setLastCoordinate] = useState<Position>([0, 0]);
   const [started, setStarted] = useState(false);
   const [crosshairPos, setCrosshairPos] = useState([0, 0]);
+  const [user, setUser] = useState();
+  const [initializing, setInitializing] = useState(true);
+
+  function onAuthStateChanged(user) {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
+  }, []);
+
+  const userData = firebase.auth().currentUser;
 
   const coordinatesWithLast = useMemo(() => {
     return [...coordinates, lastCoordinate];
   }, [coordinates, lastCoordinate]);
 
-  
   const map = useRef<MapView>(null);
+
+
+  const onPress = () => {
+    if(coordinatesWithLast.length < 3) return
+    firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .update({
+        latLong: Object.assign({}, coordinatesWithLast ),
+      })
+      .then(async (res) => {
+        // setCoordinates([]),
+        // setLastCoordinate([0, 0])
+      });
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
@@ -446,20 +478,20 @@ const HomeScreen = () => {
         >
           <Mapbox.Camera
             defaultSettings={{
-              centerCoordinate: [78.9629, 20.5937],
+              centerCoordinate: [-84.270172, 38.206348],
               zoomLevel: 12,
             }}
           />
           {started && <Polygon coordinates={coordinatesWithLast} />}
-          <MarkerView coordinate={[78.9629, 20.5937]}>
+          <MarkerView coordinate={[-84.270172, 38.206348]}>
             <View
               style={{
                 width: 12,
                 height: 12,
                 backgroundColor: "#fff",
                 borderRadius: 12 / 2,
-                alignItems:'center',
-                justifyContent:'center'
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <View
@@ -474,6 +506,23 @@ const HomeScreen = () => {
           </MarkerView>
         </Mapbox.MapView>
         <CrosshairOverlay onCenter={(c) => setCrosshairPos(c)} />
+
+        <TouchableOpacity
+          onPress={onPress}
+          style={{
+            backgroundColor: "#000",
+            width: 100,
+            height: 40,
+            alignItems: "center",
+            justifyContent: "center",
+            position:'absolute',
+            bottom:10,
+            right:10,
+            borderRadius:8
+          }}
+        >
+          <Text style={{ color: "#fff" }}>Save</Text>
+        </TouchableOpacity>
 
         {/* <MapView
           ref={map}

@@ -1,6 +1,8 @@
 import React from 'react';
 import {ScrollView, Text, TouchableOpacity, View} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import auth from '@react-native-firebase/auth';
 
 export default function ProfileScreen() {
   const profileDetails: any = [
@@ -42,6 +44,16 @@ export default function ProfileScreen() {
       icon: <Ionicons name="share-outline" color="gray" size={26} />,
       mt: true,
     },
+    {
+      name: 'Logout',
+      icon: <AntDesign name="logout" color="gray" size={24} />,
+      mt: true,
+      onPress:()=>{
+        auth()
+        .signOut()
+        .then(() => console.log('User signed out!'));
+      }
+    },
   ];
   return (
     <View style={{flex: 1, backgroundColor: '#f2f6f9'}}>
@@ -51,7 +63,7 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {profileDetails.map((item: any, index: number) => (
           <React.Fragment key={index}>
-            <TouchableOpacity>
+            <TouchableOpacity  onPress={item?.onPress}>
               <View
                 style={{
                   flexDirection: 'row',

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "616436389737",
+    "project_id": "iilva-poc",
+    "storage_bucket": "iilva-poc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616436389737:android:f5c269ac9aed6e37a38ff8",
+        "android_client_info": {
+          "package_name": "com.poc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616436389737-o320t4simidaafabod2r1iha0jocnq6l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVnfrIEz9TLCVkUFXrYQtYDRxkhmKOntM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616436389737-o320t4simidaafabod2r1iha0jocnq6l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

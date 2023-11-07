@@ -76,7 +76,8 @@ export default function FirstScreen(props: any) {
             marginTop: 20,
           }}
           onPress={() => {
-            if (pageNo == 4) return setLoggedIn(true);
+            // if (pageNo == 4) return setLoggedIn(true);
+            if (pageNo == 4) return VUtils.navigate(props.navigation, 'SignIn');
             return setPageNo(pageNo + 1);
           }}>
           <Text style={{color: 'white', textTransform: 'uppercase'}}>
