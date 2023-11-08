@@ -445,6 +445,7 @@ const HomeScreen = () => {
       .doc(userData?.uid)
       .update({
         latLong: Object.assign({}, coordinatesWithLast ),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       })
       .then(async (res) => {
         // setCoordinates([]),
