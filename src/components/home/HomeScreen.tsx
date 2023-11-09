@@ -279,6 +279,7 @@
 //   },
 // });
 
+
 import Mapbox, {
   Camera,
   LineLayer,
@@ -384,6 +385,8 @@ const CrosshairOverlay = ({
 
 const lineLayerStyle = {
   lineColor: "#fff",
+  lineWidth:2
+  
 };
 
 const Polygon = ({ coordinates }: { coordinates: Position[] }) => {
@@ -439,7 +442,7 @@ const HomeScreen = () => {
 
 
   const onPress = () => {
-    if(coordinatesWithLast.length < 3) return
+    if(coordinatesWithLast?.length < 3) return
     firestore()
       .collection("Users")
       .doc(userData?.uid)
@@ -448,8 +451,9 @@ const HomeScreen = () => {
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       })
       .then(async (res) => {
-        // setCoordinates([]),
-        // setLastCoordinate([0, 0])
+        setStarted(false);
+        setCoordinates([]),
+        setLastCoordinate([0, 0])
       });
   };
 
@@ -460,21 +464,26 @@ const HomeScreen = () => {
           styleURL="mapbox://styles/mapbox/satellite-v9"
           ref={map}
           style={styles.map}
-          onPress={async () => {
+          onPress={async (e) => {
+            console.log("eee",e?.geometry?.coordinates);
+            
             setStarted(true);
-            setCoordinates([...coordinates, lastCoordinate]);
+            setLastCoordinate(e?.geometry?.coordinates as Position);
+            setCoordinates([...coordinates, e?.geometry?.coordinates]);
           }}
           onLongPress={() => {
             setStarted(false);
           }}
           onCameraChanged={async (e) => {
-            const crosshairCoords = await map.current?.getCoordinateFromView(
-              crosshairPos
-            );
-            setLastCoordinate(crosshairCoords as Position);
-            if (crosshairCoords && started) {
-              setLastCoordinate(crosshairCoords as Position);
-            }
+            // const crosshairCoords = await map.current?.getCoordinateFromView(
+            //   crosshairPos
+            // );
+            // console.log('crosshairCoords ',crosshairCoords);
+            
+            // setLastCoordinate(crosshairCoords as Position);
+            // if (crosshairCoords && started) {
+            //   setLastCoordinate(crosshairCoords as Position);
+            // }
           }}
         >
           <Mapbox.Camera
@@ -484,31 +493,36 @@ const HomeScreen = () => {
             }}
           />
           {started && <Polygon coordinates={coordinatesWithLast} />}
-          <MarkerView coordinate={[-84.270172, 38.206348]}>
+          {coordinates?.map((marker, i)=>{
+            console.log(marker);
+            
+            return <MarkerView coordinate={marker}>
             <View
-              style={{
-                width: 12,
-                height: 12,
-                backgroundColor: "#fff",
-                borderRadius: 12 / 2,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <View
                 style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: 5 / 2,
-                  backgroundColor: "#000",
+                  width: 12,
+                  height: 12,
+                  backgroundColor: "#fff",
+                  borderRadius: 12 / 2,
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
-              />
-            </View>
-          </MarkerView>
+              >
+                <View
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: 5 / 2,
+                    backgroundColor: "#000",
+                  }}
+                />
+              </View>
+            </MarkerView>
+          })}
+         
         </Mapbox.MapView>
         <CrosshairOverlay onCenter={(c) => setCrosshairPos(c)} />
 
-        <TouchableOpacity
+       {!(coordinatesWithLast.length < 3) && <TouchableOpacity
           onPress={onPress}
           style={{
             backgroundColor: "#000",
@@ -523,7 +537,7 @@ const HomeScreen = () => {
           }}
         >
           <Text style={{ color: "#fff" }}>Save</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
         {/* <MapView
           ref={map}
@@ -590,3 +604,5 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
+
