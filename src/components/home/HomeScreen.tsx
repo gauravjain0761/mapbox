@@ -279,16 +279,23 @@
 //   },
 // });
 
-
 import Mapbox, {
   Camera,
   LineLayer,
   MapView,
   MarkerView,
   ShapeSource,
+  FillLayer,
   // MapboxGL
 } from "@rnmapbox/maps";
-import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Button,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import React, {
   useState,
   useRef,
@@ -299,6 +306,8 @@ import React, {
 } from "react";
 import auth, { firebase } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import BottomModal from "../common/modal/BottomModal";
+import BottomFieldModal from "../common/modal/BottomFieldModal";
 
 Mapbox.setAccessToken(
   "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
@@ -385,8 +394,7 @@ const CrosshairOverlay = ({
 
 const lineLayerStyle = {
   lineColor: "#fff",
-  lineWidth:2
-  
+  lineWidth: 2,
 };
 
 const Polygon = ({ coordinates }: { coordinates: Position[] }) => {
@@ -415,24 +423,40 @@ const Polygon = ({ coordinates }: { coordinates: Position[] }) => {
 };
 
 const HomeScreen = () => {
+
+  const userData = firebase.auth().currentUser;
+  const [isModalOpen, setModalOpen] = React.useState<boolean>(false);
+  
   const [coordinates, setCoordinates] = useState<Position[]>([]);
   const [lastCoordinate, setLastCoordinate] = useState<Position>([0, 0]);
   const [started, setStarted] = useState(false);
   const [crosshairPos, setCrosshairPos] = useState([0, 0]);
-  const [user, setUser] = useState();
+  const [user, setUser] = useState([]);
   const [initializing, setInitializing] = useState(true);
+  const [fieldName, setFieldName] = useState("");
+  const [selectDate, setSelectDate] = useState(new Date());
 
   function onAuthStateChanged(user) {
-    setUser(user);
     if (initializing) setInitializing(false);
   }
+  console.log("user", user);
 
   useEffect(() => {
+    const onUserData = async () => {
+      const firestoreDocument = await firestore()
+        .collection("Users")
+        .doc(userData?.uid)
+        .get();
+
+      const updatedUser = firestoreDocument.data();
+      setUser(updatedUser);
+    };
+    onUserData();
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
   }, []);
 
-  const userData = firebase.auth().currentUser;
+
 
   const coordinatesWithLast = useMemo(() => {
     return [...coordinates, lastCoordinate];
@@ -440,22 +464,64 @@ const HomeScreen = () => {
 
   const map = useRef<MapView>(null);
 
+  const onPress = async () => {
+    const firestoreDocument = await firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .get();
 
-  const onPress = () => {
-    if(coordinatesWithLast?.length < 3) return
+    const updatedUser = firestoreDocument.data();
+
+    console.log("userValue", updatedUser?.userEvent);
+
+    if (coordinatesWithLast?.length < 3) return;
+    if (fieldName == "") return Alert.alert("Enter the field name");
+
+    const updateValue = {
+      userEvent: [
+        ...updatedUser?.userEvent,
+        {
+          fieldName: fieldName,
+          date: selectDate,
+          latLong: Object.assign({}, coordinatesWithLast),
+        },
+      ],
+    };
+
     firestore()
       .collection("Users")
       .doc(userData?.uid)
-      .update({
-        latLong: Object.assign({}, coordinatesWithLast ),
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      })
+      .update(updateValue)
       .then(async (res) => {
+        console.log("reeee");
+        setModalOpen(false);
         setStarted(false);
-        setCoordinates([]),
-        setLastCoordinate([0, 0])
+        setCoordinates([]), setLastCoordinate([0, 0]);
+        setFieldName("");
       });
   };
+
+  const [polygon, setPolygon] = useState({
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [
+        [
+          [-84.25987156075617, 38.198754418243766],
+          [-84.26856827850668, 38.19733935237156],
+          [-84.26503792633733, 38.18637114374505],
+          [-84.25987156075617, 38.198754418243766],
+        ],
+        [
+          [-84.25771179814221, 38.21635021313503],
+          [-84.27373464408842, 38.219484089534916],
+          [-84.2796187400569, 38.21388456133167],
+          [-84.2796187400569, 38.21388456133137],
+          // [-84.25771179814221, 38.21635021313503],
+        ],
+      ],
+    },
+  });
 
   return (
     <View style={{ flex: 1 }}>
@@ -465,8 +531,8 @@ const HomeScreen = () => {
           ref={map}
           style={styles.map}
           onPress={async (e) => {
-            console.log("eee",e?.geometry?.coordinates);
-            
+            console.log("eee", e?.geometry?.coordinates);
+
             setStarted(true);
             setLastCoordinate(e?.geometry?.coordinates as Position);
             setCoordinates([...coordinates, e?.geometry?.coordinates]);
@@ -474,17 +540,7 @@ const HomeScreen = () => {
           onLongPress={() => {
             setStarted(false);
           }}
-          onCameraChanged={async (e) => {
-            // const crosshairCoords = await map.current?.getCoordinateFromView(
-            //   crosshairPos
-            // );
-            // console.log('crosshairCoords ',crosshairCoords);
-            
-            // setLastCoordinate(crosshairCoords as Position);
-            // if (crosshairCoords && started) {
-            //   setLastCoordinate(crosshairCoords as Position);
-            // }
-          }}
+          onCameraChanged={async (e) => {}}
         >
           <Mapbox.Camera
             defaultSettings={{
@@ -493,77 +549,67 @@ const HomeScreen = () => {
             }}
           />
           {started && <Polygon coordinates={coordinatesWithLast} />}
-          {coordinates?.map((marker, i)=>{
+          {coordinates?.map((marker, i) => {
             console.log(marker);
-            
-            return <MarkerView coordinate={marker}>
-            <View
-                style={{
-                  width: 12,
-                  height: 12,
-                  backgroundColor: "#fff",
-                  borderRadius: 12 / 2,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+
+            return (
+              <MarkerView coordinate={marker}>
                 <View
                   style={{
-                    width: 5,
-                    height: 5,
-                    borderRadius: 5 / 2,
-                    backgroundColor: "#000",
+                    width: 12,
+                    height: 12,
+                    backgroundColor: "#fff",
+                    borderRadius: 12 / 2,
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                />
-              </View>
-            </MarkerView>
+                >
+                  <View
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: 5 / 2,
+                      backgroundColor: "#000",
+                    }}
+                  />
+                </View>
+              </MarkerView>
+            );
           })}
-         
+          <ShapeSource id="source" shape={polygon}>
+            <FillLayer id="fill" style={{ fillColor: "blue" }} />
+            <LineLayer id="line" style={{ lineColor: "red", lineWidth: 2 }} />
+          </ShapeSource>
         </Mapbox.MapView>
         <CrosshairOverlay onCenter={(c) => setCrosshairPos(c)} />
 
-       {!(coordinatesWithLast.length < 3) && <TouchableOpacity
-          onPress={onPress}
-          style={{
-            backgroundColor: "#000",
-            width: 100,
-            height: 40,
-            alignItems: "center",
-            justifyContent: "center",
-            position:'absolute',
-            bottom:10,
-            right:10,
-            borderRadius:8
-          }}
-        >
-          <Text style={{ color: "#fff" }}>Save</Text>
-        </TouchableOpacity>}
-
-        {/* <MapView
-          ref={map}
-          style={{ flex: 1 }}
-          onPress={async()=>{
-            setStarted(true);
-            setCoordinates([...coordinates, lastCoordinate])
-          }}
-          onCameraChanged={async (e) => {
-            const crosshairCoords = await map.current?.getCoordinateFromView(
-              crosshairPos,
-            );
-            setLastCoordinate(crosshairCoords as Position);
-            if (crosshairCoords && started) {
-              setLastCoordinate(crosshairCoords as Position);
-            }
-          }}
-        >
-         {started&&  <Polygon coordinates={coordinatesWithLast} />}
-          <Camera
-            defaultSettings={{
-              centerCoordinate: [-73.970895, 40.723279],
-              zoomLevel: 12,
+        {!(coordinatesWithLast.length < 3) && (
+          <TouchableOpacity
+            onPress={() => setModalOpen(true)}
+            style={{
+              backgroundColor: "#fff",
+              width: 100,
+              height: 40,
+              alignItems: "center",
+              justifyContent: "center",
+              position: "absolute",
+              bottom: 10,
+              right: 10,
+              borderRadius: 8,
             }}
-          />
-        </MapView> */}
+          >
+            <Text style={{ color: "#000" }}>Next</Text>
+          </TouchableOpacity>
+        )}
+
+        <BottomFieldModal
+          isModalOpen={isModalOpen}
+          onPress={onPress}
+          onClose={() => setModalOpen(false)}
+          fieldName={fieldName}
+          setFieldName={(text) => setFieldName(text)}
+          selectDate={selectDate}
+        />
       </View>
     </View>
   );
@@ -604,5 +650,3 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
-
-
