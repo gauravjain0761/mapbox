@@ -423,10 +423,9 @@ const Polygon = ({ coordinates }: { coordinates: Position[] }) => {
 };
 
 const HomeScreen = () => {
-
   const userData = firebase.auth().currentUser;
   const [isModalOpen, setModalOpen] = React.useState<boolean>(false);
-  
+
   const [coordinates, setCoordinates] = useState<Position[]>([]);
   const [lastCoordinate, setLastCoordinate] = useState<Position>([0, 0]);
   const [started, setStarted] = useState(false);
@@ -435,11 +434,22 @@ const HomeScreen = () => {
   const [initializing, setInitializing] = useState(true);
   const [fieldName, setFieldName] = useState("");
   const [selectDate, setSelectDate] = useState(new Date());
+  const [polygon, setPolygon] = useState({
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [],
+    },
+  });
 
   function onAuthStateChanged(user) {
     if (initializing) setInitializing(false);
   }
-  console.log("user", user);
+
+  const userUpdate = [];
+  user?.userEvent?.map((item) => {
+    userUpdate.push(item.latLong);
+  });
 
   useEffect(() => {
     const onUserData = async () => {
@@ -450,13 +460,23 @@ const HomeScreen = () => {
 
       const updatedUser = firestoreDocument.data();
       setUser(updatedUser);
+      const userUpdate = [];
+      updatedUser?.userEvent?.map((item) => {
+        userUpdate.push(JSON.parse(item.latLong));
+      });
+  
+      setPolygon({
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: userUpdate,
+        },
+      });
     };
     onUserData();
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
-  }, []);
-
-
+  }, [isModalOpen]);
 
   const coordinatesWithLast = useMemo(() => {
     return [...coordinates, lastCoordinate];
@@ -471,22 +491,28 @@ const HomeScreen = () => {
       .get();
 
     const updatedUser = firestoreDocument.data();
-
-    console.log("userValue", updatedUser?.userEvent);
-
     if (coordinatesWithLast?.length < 3) return;
     if (fieldName == "") return Alert.alert("Enter the field name");
-
-    const updateValue = {
-      userEvent: [
-        ...updatedUser?.userEvent,
-        {
-          fieldName: fieldName,
-          date: selectDate,
-          latLong: Object.assign({}, coordinatesWithLast),
-        },
-      ],
-    };
+    const updateValue = updatedUser?.userEvent
+      ? {
+          userEvent: [
+            ...updatedUser?.userEvent,
+            {
+              fieldName: fieldName,
+              date: selectDate,
+              latLong: JSON.stringify(coordinatesWithLast),
+            },
+          ],
+        }
+      : {
+          userEvent: [
+            {
+              fieldName: fieldName,
+              date: selectDate,
+              latLong: JSON.stringify(coordinatesWithLast),
+            },
+          ],
+        };
 
     firestore()
       .collection("Users")
@@ -496,32 +522,11 @@ const HomeScreen = () => {
         console.log("reeee");
         setModalOpen(false);
         setStarted(false);
-        setCoordinates([]), setLastCoordinate([0, 0]);
+        setCoordinates([]),
+         setLastCoordinate([0, 0]);
         setFieldName("");
       });
   };
-
-  const [polygon, setPolygon] = useState({
-    type: "Feature",
-    geometry: {
-      type: "Polygon",
-      coordinates: [
-        [
-          [-84.25987156075617, 38.198754418243766],
-          [-84.26856827850668, 38.19733935237156],
-          [-84.26503792633733, 38.18637114374505],
-          [-84.25987156075617, 38.198754418243766],
-        ],
-        [
-          [-84.25771179814221, 38.21635021313503],
-          [-84.27373464408842, 38.219484089534916],
-          [-84.2796187400569, 38.21388456133167],
-          [-84.2796187400569, 38.21388456133137],
-          // [-84.25771179814221, 38.21635021313503],
-        ],
-      ],
-    },
-  });
 
   return (
     <View style={{ flex: 1 }}>
@@ -550,8 +555,6 @@ const HomeScreen = () => {
           />
           {started && <Polygon coordinates={coordinatesWithLast} />}
           {coordinates?.map((marker, i) => {
-            console.log(marker);
-
             return (
               <MarkerView coordinate={marker}>
                 <View
@@ -578,12 +581,12 @@ const HomeScreen = () => {
           })}
           <ShapeSource id="source" shape={polygon}>
             <FillLayer id="fill" style={{ fillColor: "blue" }} />
-            <LineLayer id="line" style={{ lineColor: "red", lineWidth: 2 }} />
+            <LineLayer id="line" style={{ lineColor: "#fff", lineWidth: 2 }} />
           </ShapeSource>
         </Mapbox.MapView>
         <CrosshairOverlay onCenter={(c) => setCrosshairPos(c)} />
 
-        {!(coordinatesWithLast.length < 3) && (
+        {!(coordinatesWithLast.length <= 3) && (
           <TouchableOpacity
             onPress={() => setModalOpen(true)}
             style={{

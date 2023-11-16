@@ -128,6 +128,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginHorizontal: 16,
     marginBottom: 18,
+    flex:1
   },
   bodyText: {
     fontSize: 18,
@@ -137,7 +138,9 @@ const styles = StyleSheet.create({
   bodyInput: {
     fontSize: 18,
     fontWeight: "600",
-    // flex:1
+    flex:0.3,
+    marginRight:10,
+
   },
   dateText: {
     fontSize: 18,
