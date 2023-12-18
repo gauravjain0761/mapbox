@@ -35,6 +35,7 @@ export default function SignIn() {
         const userData = {
           id: uid,
           email:data?.email,
+          userEvent:[]
         }
 
         firestore()

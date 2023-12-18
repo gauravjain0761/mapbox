@@ -308,6 +308,8 @@ import auth, { firebase } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import BottomModal from "../common/modal/BottomModal";
 import BottomFieldModal from "../common/modal/BottomFieldModal";
+import axios from "axios";
+import WebView from "react-native-webview";
 
 Mapbox.setAccessToken(
   "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
@@ -434,45 +436,74 @@ const HomeScreen = () => {
   const [initializing, setInitializing] = useState(true);
   const [fieldName, setFieldName] = useState("");
   const [selectDate, setSelectDate] = useState(new Date());
+  const [selectMapView, setSelectMapView] = useState(false);
   const [polygon, setPolygon] = useState({
     type: "Feature",
     geometry: {
-      type: "Polygon",
+      type: "MultiPolygon",
       coordinates: [],
     },
   });
+  const [webView, setWebView] = useState("");
 
   function onAuthStateChanged(user) {
     if (initializing) setInitializing(false);
   }
 
-  const userUpdate = [];
-  user?.userEvent?.map((item) => {
-    userUpdate.push(item.latLong);
-  });
+  useEffect(()=>{
+    var config = {
+      method: "GET",
+      url: "http://143.244.177.79:5431/get_final_geometry/",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    axios(config)
+      .then(function (response) {
+        setWebView(response?.data);
+      })
+      .catch(function (error) {
+        // console.log(error.response);
+      });
+  },[])
+
+
+  const onUserData = async () => {
+    const firestoreDocument = await firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .get();
+
+    const updatedUser = firestoreDocument.data();
+    setUser(updatedUser);
+    const userUpdate = [];
+    updatedUser?.userEvent?.map((item) => {
+      userUpdate.push(JSON.parse(item.latLong));
+    });
+    var data = JSON.stringify({
+      lats_longs: userUpdate,
+    });
+    var config = {
+      method: "post",
+      url: "http://143.244.177.79:5431/get_final_geometry/",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: data,
+    };
+
+    axios(config)
+      .then(function (response) {
+        setWebView(response?.data);
+      })
+      .catch(function (error) {
+        // console.log(error.response);
+      });
+  };
 
   useEffect(() => {
-    const onUserData = async () => {
-      const firestoreDocument = await firestore()
-        .collection("Users")
-        .doc(userData?.uid)
-        .get();
-
-      const updatedUser = firestoreDocument.data();
-      setUser(updatedUser);
-      const userUpdate = [];
-      updatedUser?.userEvent?.map((item) => {
-        userUpdate.push(JSON.parse(item.latLong));
-      });
-  
-      setPolygon({
-        type: "Feature",
-        geometry: {
-          type: "Polygon",
-          coordinates: userUpdate,
-        },
-      });
-    };
+ 
     onUserData();
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
@@ -519,103 +550,148 @@ const HomeScreen = () => {
       .doc(userData?.uid)
       .update(updateValue)
       .then(async (res) => {
-        console.log("reeee");
+        setSelectMapView(false)
         setModalOpen(false);
         setStarted(false);
-        setCoordinates([]),
-         setLastCoordinate([0, 0]);
+        setCoordinates([]), 
+        setLastCoordinate([0, 0]);
         setFieldName("");
       });
   };
 
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <Mapbox.MapView
-          styleURL="mapbox://styles/mapbox/satellite-v9"
-          ref={map}
-          style={styles.map}
-          onPress={async (e) => {
-            console.log("eee", e?.geometry?.coordinates);
+  const onDeletePree=()=>{
+    firestore()
+    .collection("Users")
+    .doc(userData?.uid)
+    .update({userEvent:[]})
+    .then(async (res) => {
+      onUserData();
+      setSelectMapView(true)
+    });
+  }
 
-            setStarted(true);
-            setLastCoordinate(e?.geometry?.coordinates as Position);
-            setCoordinates([...coordinates, e?.geometry?.coordinates]);
-          }}
-          onLongPress={() => {
-            setStarted(false);
-          }}
-          onCameraChanged={async (e) => {}}
-        >
-          <Mapbox.Camera
-            defaultSettings={{
-              centerCoordinate: [-84.270172, 38.206348],
-              zoomLevel: 12,
+  if (selectMapView) {
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <Mapbox.MapView
+            styleURL="mapbox://styles/mapbox/streets-v11"
+            ref={map}
+            style={styles.map}
+            onPress={async (e) => {
+              setStarted(true);
+              setLastCoordinate(e?.geometry?.coordinates as Position);
+              setCoordinates([...coordinates, e?.geometry?.coordinates]);
             }}
-          />
-          {started && <Polygon coordinates={coordinatesWithLast} />}
-          {coordinates?.map((marker, i) => {
-            return (
-              <MarkerView coordinate={marker}>
-                <View
-                  style={{
-                    width: 12,
-                    height: 12,
-                    backgroundColor: "#fff",
-                    borderRadius: 12 / 2,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+            onLongPress={() => {
+              setStarted(false);
+            }}
+            onCameraChanged={async (e) => {}}
+          >
+            <Mapbox.Camera
+              defaultSettings={{
+                centerCoordinate: [77.37503342574126, 17.130181329213883],
+                zoomLevel: 5,
+              }}
+            />
+            {started && <Polygon coordinates={coordinatesWithLast} />}
+            {coordinates?.map((marker, i) => {
+              return (
+                <MarkerView coordinate={marker}>
                   <View
                     style={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: 5 / 2,
-                      backgroundColor: "#000",
+                      width: 12,
+                      height: 12,
+                      backgroundColor: "#fff",
+                      borderRadius: 12 / 2,
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
-                  />
-                </View>
-              </MarkerView>
-            );
-          })}
-          <ShapeSource id="source" shape={polygon}>
-            <FillLayer id="fill" style={{ fillColor: "blue" }} />
-            <LineLayer id="line" style={{ lineColor: "#fff", lineWidth: 2 }} />
-          </ShapeSource>
-        </Mapbox.MapView>
-        <CrosshairOverlay onCenter={(c) => setCrosshairPos(c)} />
+                  >
+                    <View
+                      style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: 5 / 2,
+                        backgroundColor: "#000",
+                      }}
+                    />
+                  </View>
+                </MarkerView>
+              );
+            })}
+            <ShapeSource id="source" shape={polygon}>
+              <FillLayer id="fill" style={{ fillColor: "blue" }} />
+              <LineLayer
+                id="line"
+                style={{ lineColor: "#fff", lineWidth: 2 }}
+              />
+            </ShapeSource>
+          </Mapbox.MapView>
+          <CrosshairOverlay onCenter={(c) => setCrosshairPos(c)} />
 
-        {!(coordinatesWithLast.length <= 3) && (
-          <TouchableOpacity
-            onPress={() => setModalOpen(true)}
-            style={{
-              backgroundColor: "#fff",
-              width: 100,
-              height: 40,
-              alignItems: "center",
-              justifyContent: "center",
-              position: "absolute",
-              bottom: 10,
-              right: 10,
-              borderRadius: 8,
-            }}
-          >
-            <Text style={{ color: "#000" }}>Next</Text>
-          </TouchableOpacity>
-        )}
+          {!(coordinatesWithLast.length <= 3) && (
+            <TouchableOpacity
+              onPress={() => setModalOpen(true)}
+              style={{
+                backgroundColor: "#fff",
+                width: 100,
+                height: 40,
+                alignItems: "center",
+                justifyContent: "center",
+                position: "absolute",
+                bottom: 10,
+                right: 10,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: "#000" }}>Next</Text>
+            </TouchableOpacity>
+          )}
 
-        <BottomFieldModal
-          isModalOpen={isModalOpen}
-          onPress={onPress}
-          onClose={() => setModalOpen(false)}
-          fieldName={fieldName}
-          setFieldName={(text) => setFieldName(text)}
-          selectDate={selectDate}
-        />
+          <BottomFieldModal
+            isModalOpen={isModalOpen}
+            onPress={onPress}
+            onClose={() => setModalOpen(false)}
+            fieldName={fieldName}
+            setFieldName={(text) => setFieldName(text)}
+            selectDate={selectDate}
+          />
+        </View>
       </View>
-    </View>
-  );
+    );
+  } else {
+    return (
+      <>
+        <WebView
+          source={{ html: webView }}
+          style={{ flex: 1 }}
+          injectedJavaScriptForMainFrameOnly={true}
+          originWhitelist={["*"]}
+          javaScriptEnabled={true}
+          domStorageEnabled
+          startInLoadingState
+          mixedContentMode="always"
+        />
+        <TouchableOpacity style={[styles.btnStyle,{ backgroundColor: user?.userEvent?.length == 0 ? "green" : "red",}]} onPress={()=>{
+          if(user?.userEvent?.length == 0){
+            setSelectMapView(true)
+          }else{
+            Alert.alert('', 'Are you sure you want to Delete', [
+              {
+                text: 'Cancel',
+                onPress: () => console.log('Cancel Pressed'),
+                style: 'cancel',
+              },
+              {text: 'Ok', onPress: () => onDeletePree()},
+            ]);
+          }
+        }}>
+          <Text style={styles.btnTextStyle}>{user?.userEvent?.length ==0 ? "Add Field"  :"Delete Field" } </Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
 };
 
 HomeScreen.title = "Draw Polyline";
@@ -650,6 +726,19 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
+  btnStyle: {
+    position: "absolute",
+    top: 10,
+   
+    right: 10,
+    width: 130,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "flex-end",
+    borderRadius: 10,
+  },
+  btnTextStyle: { fontSize: 18, color: "#fff" },
 });
 
 export default HomeScreen;

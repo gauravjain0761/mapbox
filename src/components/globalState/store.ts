@@ -1,5 +1,5 @@
 import { Store } from "pullstate";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
 
 let initialState = {
   isLoggedIn: false,
@@ -21,5 +21,5 @@ export const asyncKeys = {
 };
 
 export const setAsyncToken = async (token: string) => {
-  await AsyncStorage.setItem(asyncKeys.token, JSON.stringify(token));
+  // await AsyncStorage.setItem(asyncKeys.token, JSON.stringify(token));
 };
