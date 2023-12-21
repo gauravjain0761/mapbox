@@ -24,14 +24,16 @@ if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
 end
-$RNMapboxMapsImpl = 'mapbox'
-target 'poc' do
 
+$RNMapboxMapsImpl = 'mapbox'
+#  $RNMapboxMapsVersion = '~> 10.0.15' 
+target 'poc' do
+ 
+
+  config = use_native_modules!
   pre_install do |installer|
     $RNMapboxMaps.pre_install(installer)
   end
-
-  config = use_native_modules!
   pod 'Firebase', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
   pod 'FirebaseCoreInternal', :modular_headers => true
