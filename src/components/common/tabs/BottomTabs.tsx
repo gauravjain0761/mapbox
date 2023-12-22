@@ -31,7 +31,7 @@ export default function TabScreen() {
   // ]
   return (
     <Tab.Navigator
-      initialRouteName={'HomeScreen'}
+      initialRouteName={'Stack'}
       // tabBarOptions={{
       //   activeTintColor: 'blue',
       //   inactiveTintColor: 'gray',

@@ -17,8 +17,12 @@ import { Modalize } from "react-native-modalize";
 import { SafeAreaView } from "react-native-safe-area-context";
 import moment from "moment";
 import AntDesign from "react-native-vector-icons/AntDesign";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useNavigation } from "@react-navigation/native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import {
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 
 Mapbox.setAccessToken(
   "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
@@ -28,24 +32,28 @@ Mapbox.setTelemetryEnabled(false);
 type Position = [number, number];
 
 const NoteEditScreen = () => {
+  const { params } = useRoute();
   const navigationRef = useNavigation();
+  const isFocused = useIsFocused();
 
   const userData = firebase.auth().currentUser;
-  const [isModalOpen, setModalOpen] = React.useState<boolean>(false);
   const [editSelectModal, setEditSelectModal] = React.useState<boolean>(false);
 
   const [coordinates, setCoordinates] = useState<Position[]>([]);
   const [lastCoordinate, setLastCoordinate] = useState<Position>([0, 0]);
-  const [started, setStarted] = useState(false);
   const [crosshairPos, setCrosshairPos] = useState([0, 0]);
   const [user, setUser] = useState([]);
   const [initializing, setInitializing] = useState(true);
   const [fieldName, setFieldName] = useState("");
-  const [selectDate, setSelectDate] = useState(new Date());
-  const [selectMapView, setSelectMapView] = useState(false);
+  const [selectDate, setSelectDate] = useState(
+    moment(new Date()).format("MMMM DD YYYY")
+  );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [selectTime, setSelectTime] = useState(new Date());
+  const [selectTime, setSelectTime] = useState(
+    moment(new Date()).format("HH:MM a")
+  );
+  const [coomentValue, setCoomentValue] = useState("");
 
   const [webView, setWebView] = useState("");
   const modalizeRef = useRef<Modalize>(null);
@@ -82,6 +90,16 @@ const NoteEditScreen = () => {
     const updatedUser = firestoreDocument.data();
     setUser(updatedUser);
     const userUpdate = [];
+    console.log("updatedUser", updatedUser?.userNotes[0]);
+    console.log("updatedUser", updatedUser?.userEvent[0]?.fieldName);
+    // if (updatedUser?.userNotes?.length !== 0) {
+    //   setSelectDate(updatedUser?.userNotes[0].date);
+    //   setSelectTime(updatedUser?.userNotes[0].time);
+    //   setCoomentValue(updatedUser?.userNotes[0]?.cooment);
+    //   setFieldName(updatedUser?.userNotes[0]?.fieldName);
+    // }
+    setFieldName(updatedUser?.userEvent[0]?.fieldName);
+
     updatedUser?.userEvent?.map((item) => {
       userUpdate.push(JSON.parse(item.latLong));
     });
@@ -108,9 +126,7 @@ const NoteEditScreen = () => {
 
   useEffect(() => {
     onUserData();
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
-  }, [isModalOpen]);
+  }, [isFocused]);
 
   const coordinatesWithLast = useMemo(() => {
     return [...coordinates, lastCoordinate];
@@ -151,11 +167,73 @@ const NoteEditScreen = () => {
       .doc(userData?.uid)
       .update(updateValue)
       .then(async (res) => {
-        setSelectMapView(false);
-        setModalOpen(false);
-        setStarted(false);
+        navigationRef.goBack();
         setCoordinates([]), setLastCoordinate([0, 0]);
         setFieldName("");
+      });
+  };
+
+  const onNewNotesPress = () => {
+    const updateValue1 = {
+      userNotes: [
+        {
+          fieldName: fieldName,
+          latLong: [],
+          time: selectTime,
+          date: selectDate,
+          cooment: coomentValue,
+        },
+      ],
+    };
+
+    firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .update(updateValue1)
+      .then(async (res) => {
+        navigationRef.goBack();
+        setCoordinates([]),
+         setLastCoordinate([0, 0]);
+        setFieldName("");
+      })
+      .catch((E) => {
+        console.log(E);
+      });
+  };
+
+  const onEditNotesPress = () => {
+    const updateValue1 = {
+      userNotes: [
+        {
+          fieldName: fieldName,
+          latLong: [],
+          time: selectTime,
+          date: selectDate,
+          cooment: coomentValue,
+        },
+      ],
+    };
+
+    firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .update(updateValue1)
+      .then(async (res) => {
+        setEditSelectModal(false);
+        onUserData();
+      })
+      .catch((E) => {
+        console.log(E);
+      });
+  };
+
+  const onDeletePree = () => {
+    firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .update({ userNotes: [] })
+      .then(async (res) => {
+        navigationRef.goBack();
       });
   };
 
@@ -187,16 +265,16 @@ const NoteEditScreen = () => {
           modalHeight={600}
           snapPoint={300}
         >
-          {editSelectModal ? (
+          {params?.newaddting ? (
             <View style={{ marginTop: 18 }}>
               <View style={styles.editTopView}>
-                <TouchableOpacity onPress={()=>setEditSelectModal(false)}>
+                <TouchableOpacity onPress={() => navigationRef.goBack()}>
                   <Text style={styles.cancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <View>
-                  <Text style={styles.editingText}>Editing</Text>
+                  <Text style={styles.editingText}>New note</Text>
                 </View>
-                <TouchableOpacity onPress={()=>setEditSelectModal(false)}>
+                <TouchableOpacity onPress={onNewNotesPress}>
                   <Text style={styles.saveText}>Save</Text>
                 </TouchableOpacity>
               </View>
@@ -207,29 +285,40 @@ const NoteEditScreen = () => {
                   marginTop: 10,
                 }}
               />
-              <View style={{ marginTop: 10, marginLeft: 16 }}>
+              <View style={{ marginTop: 0, marginLeft: 16 }}>
                 <View style={styles.editFiledView}>
                   <Text style={styles.fieldText}>{"Field"}</Text>
-                  <Text
-                    style={[
-                      styles.fieldSubText,
-                      { color: "#2c93f6", marginRight: 16 },
-                    ]}
-                  >
-                    {"Field 1"}
-                  </Text>
+                  <TextInput
+                    placeholder="Enter your field"
+                    value={fieldName}
+                    onChangeText={(text) => {
+                      setFieldName(text);
+                    }}
+                    style={{
+                      fontSize: 16,
+                      color: "#2c93f6",
+                      fontWeight: "400",
+                      textAlign: "right",
+                      marginRight: 16,
+                      // height:10
+                    }}
+                  />
                 </View>
                 <View
                   style={{
                     height: 1.5,
                     backgroundColor: "#f2f6f9",
-                    marginTop: 10,
+                    // marginTop: 10,
                   }}
                 />
                 <TextInput
                   placeholder="Your comment..."
                   style={styles.editTextInput}
                   multiline
+                  value={coomentValue}
+                  onChangeText={(text) => {
+                    setCoomentValue(text);
+                  }}
                 />
               </View>
               <View
@@ -241,27 +330,28 @@ const NoteEditScreen = () => {
               />
               <View style={[styles.editFiledView, { marginHorizontal: 16 }]}>
                 <Text style={styles.fieldText}>{"Date"}</Text>
-                <TouchableOpacity onPress={()=>setShowDatePicker(true)}>
-
-                <Text
-                  style={[
-                    styles.fieldSubText,
-                    { color: "#2c93f6", marginRight: 16 },
-                  ]}
-                >
-                  {moment(selectDate).format("MMMM DD, yyyy")}
-                </Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                  <Text
+                    style={[
+                      styles.fieldSubText,
+                      { color: "#2c93f6", marginRight: 16 },
+                    ]}
+                  >
+                    {selectDate}
+                  </Text>
                 </TouchableOpacity>
-               {showDatePicker && <DateTimePicker
-                  value={selectDate}
-                  mode="date"
-                  display="calendar"
-                  onChange={(e, d) => {
-                    setSelectDate(d)
-                    setShowDatePicker(false)
-                  }}
-                  style={{ backgroundColor: "white" }}
-                />}
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="date"
+                    display="calendar"
+                    onChange={(e, d) => {
+                      setSelectDate(moment(d).format("MMMM DD YYYY"));
+                      setShowDatePicker(false);
+                    }}
+                    style={{ backgroundColor: "white" }}
+                  />
+                )}
               </View>
               <View
                 style={{
@@ -272,27 +362,157 @@ const NoteEditScreen = () => {
               />
               <View style={[styles.editFiledView, { marginHorizontal: 16 }]}>
                 <Text style={styles.fieldText}>{"Time"}</Text>
-                <TouchableOpacity onPress={()=>setShowTimePicker(true)}>
-                  
-                <Text
-                  style={[
-                    styles.fieldSubText,
-                    { color: "#2c93f6", marginRight: 16 },
-                  ]}
-                >
-                  {moment(selectTime).format("hh:ss")}
-                </Text>
+                <TouchableOpacity onPress={() => setShowTimePicker(true)}>
+                  <Text
+                    style={[
+                      styles.fieldSubText,
+                      { color: "#2c93f6", marginRight: 16 },
+                    ]}
+                  >
+                    {selectTime}
+                  </Text>
                 </TouchableOpacity>
-                {showTimePicker && <DateTimePicker
-                  value={selectTime}
-                  mode="time"
-                  display='clock'
-                  onChange={(e, d) => {
-                    setSelectTime(d)
-                    setShowTimePicker(false)
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="time"
+                    display="clock"
+                    onChange={(e, d) => {
+                      setSelectTime(moment(d).format("HH:MM a"));
+                      setShowTimePicker(false);
+                    }}
+                    style={{ backgroundColor: "white" }}
+                  />
+                )}
+              </View>
+              <View
+                style={{
+                  height: 15,
+                  backgroundColor: "#f2f6f9",
+                  marginVertical: 15,
+                }}
+              />
+            </View>
+          ) : editSelectModal ? (
+            <View style={{ marginTop: 18 }}>
+              <View style={styles.editTopView}>
+                <TouchableOpacity onPress={() => setEditSelectModal(false)}>
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <View>
+                  <Text style={styles.editingText}>Editing</Text>
+                </View>
+                <TouchableOpacity onPress={() => onEditNotesPress()}>
+                  <Text style={styles.saveText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+              <View
+                style={{
+                  height: 1.5,
+                  backgroundColor: "#f2f6f9",
+                  marginTop: 10,
+                }}
+              />
+              <View style={{ marginTop: 0, marginLeft: 16 }}>
+                <View style={styles.editFiledView}>
+                  <Text style={styles.fieldText}>{"Field"}</Text>
+
+                  <TextInput
+                    placeholder="Enter your field"
+                    value={fieldName}
+                    onChangeText={(text) => {
+                      setFieldName(text);
+                    }}
+                    style={{
+                      fontSize: 16,
+                      color: "#2c93f6",
+                      fontWeight: "400",
+                      textAlign: "right",
+                      marginRight: 16,
+                      
+                    }}
+                  />
+                </View>
+                <View
+                  style={{
+                    height: 1.5,
+                    backgroundColor: "#f2f6f9",
+                    // marginTop: 10,
                   }}
-                  style={{ backgroundColor: "white" }}
-                />}
+                />
+                <TextInput
+                  placeholder="Your comment..."
+                  style={styles.editTextInput}
+                  multiline
+                  value={coomentValue}
+                  onChangeText={(text) => {
+                    setCoomentValue(text);
+                  }}
+                />
+              </View>
+              <View
+                style={{
+                  height: 15,
+                  backgroundColor: "#f2f6f9",
+                  marginVertical: 15,
+                }}
+              />
+              <View style={[styles.editFiledView, { marginHorizontal: 16 }]}>
+                <Text style={styles.fieldText}>{"Date"}</Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                  <Text
+                    style={[
+                      styles.fieldSubText,
+                      { color: "#2c93f6", marginRight: 16 },
+                    ]}
+                  >
+                    {selectDate}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="date"
+                    display="calendar"
+                    onChange={(e, d) => {
+                      setSelectDate(moment(d).format("MMMM DD YYYY"));
+                      setShowDatePicker(false);
+                    }}
+                    style={{ backgroundColor: "white" }}
+                  />
+                )}
+              </View>
+              <View
+                style={{
+                  height: 1.5,
+                  backgroundColor: "#f2f6f9",
+                  marginVertical: 10,
+                }}
+              />
+              <View style={[styles.editFiledView, { marginHorizontal: 16 }]}>
+                <Text style={styles.fieldText}>{"Time"}</Text>
+                <TouchableOpacity onPress={() => setShowTimePicker(true)}>
+                  <Text
+                    style={[
+                      styles.fieldSubText,
+                      { color: "#2c93f6", marginRight: 16 },
+                    ]}
+                  >
+                    {selectTime}
+                  </Text>
+                </TouchableOpacity>
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="time"
+                    display="clock"
+                    onChange={(e, d) => {
+                      setSelectTime(moment(d).format("HH:MM a"));
+                      setShowTimePicker(false);
+                    }}
+                    style={{ backgroundColor: "white" }}
+                  />
+                )}
               </View>
               <View
                 style={{
@@ -307,18 +527,23 @@ const NoteEditScreen = () => {
               <View style={styles.topView}>
                 <View style={styles.leftView}>
                   <Text style={styles.topTextStyle}>
-                    {moment(new Date()).format("MMMM DD YYYY, hh:MM a")}
+                    {`${user?.userNotes?.[0]?.date} ${user?.userNotes?.[0]?.time}`}
                   </Text>
-                  <Text style={styles.topSubTextStyle}>{"cooment"}</Text>
+                  <Text style={styles.topSubTextStyle}>
+                    {user?.userNotes?.[0]?.cooment}
+                  </Text>
                 </View>
-                <TouchableOpacity onPress={()=>{navigationRef.goBack()}}>
-
-                <AntDesign
-                  name="closecircle"
-                  color="grey"
-                  style={{ opacity: 0.4 }}
-                  size={22}
-                />
+                <TouchableOpacity
+                  onPress={() => {
+                    navigationRef.goBack();
+                  }}
+                >
+                  <AntDesign
+                    name="closecircle"
+                    color="grey"
+                    style={{ opacity: 0.4 }}
+                    size={22}
+                  />
                 </TouchableOpacity>
               </View>
               <View
@@ -330,7 +555,10 @@ const NoteEditScreen = () => {
               />
               <View style={{ marginTop: 10, marginHorizontal: 16 }}>
                 <Text style={styles.headerText}>Field information</Text>
-                <FieldView label="Name" value={"field 1"} />
+                <FieldView
+                  label="Name"
+                  value={user?.userNotes?.[0]?.fieldName}
+                />
               </View>
               <View
                 style={{
@@ -341,14 +569,29 @@ const NoteEditScreen = () => {
               />
             </View>
           )}
-          <TouchableOpacity
-            style={styles.btnStyleBottom}
-            onPress={() => {
-              setEditSelectModal(true);
-            }}
-          >
-            <Text style={[styles.btnStyleBottomText,{color:editSelectModal ? "red" : "#2c93f6"}]}>{editSelectModal ? "Delete note" :"Edit note"}</Text>
-          </TouchableOpacity>
+          {!params?.newaddting && (
+            <TouchableOpacity
+              style={styles.btnStyleBottom}
+              onPress={() => {
+                editSelectModal ? onDeletePree() :
+                 setEditSelectModal(true);
+                 setSelectDate(user?.userNotes?.[0].date);
+                 setSelectTime(user?.userNotes?.[0].time);
+                 setCoomentValue(user?.userNotes?.[0]?.cooment);
+                 setFieldName(user?.userNotes?.[0]?.fieldName);
+
+              }}
+            >
+              <Text
+                style={[
+                  styles.btnStyleBottomText,
+                  { color: editSelectModal ? "red" : "#2c93f6" },
+                ]}
+              >
+                {editSelectModal ? "Delete note" : "Edit note"}
+              </Text>
+            </TouchableOpacity>
+          )}
         </Modalize>
       </SafeAreaView>
     </>

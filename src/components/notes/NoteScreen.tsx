@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TextInput,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -14,17 +15,24 @@ import moment from "moment";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import Mapbox from "@rnmapbox/maps";
 
 export default function NoteScreen() {
   const navigationRef = useNavigation();
+  const isFocused = useIsFocused();
 
   const userData = firebase.auth().currentUser;
   const [user, setUser] = useState([]);
   const [initializing, setInitializing] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  function onAuthStateChanged(user: any) {
-    if (initializing) setInitializing(false);
-  }
+  Mapbox.setAccessToken(
+    "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
+  );
+  Mapbox.setTelemetryEnabled(false);
+
 
   const onUserData = async () => {
     const firestoreDocument = await firestore()
@@ -33,37 +41,27 @@ export default function NoteScreen() {
       .get();
 
     const updatedUser = firestoreDocument.data();
+    console.log('updatedUser',updatedUser);
+    
     setUser(updatedUser);
-    const userUpdate = [];
-    updatedUser?.userEvent?.map((item) => {
-      userUpdate.push(JSON.parse(item.latLong));
-    });
-    var data = JSON.stringify({
-      lats_longs: userUpdate,
-    });
-    var config = {
-      method: "post",
-      url: "http://143.244.177.79:5431/get_final_geometry/",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: data,
-    };
-
-    axios(config)
-      .then(function (response) {
-        // setWebView(response?.data);
-      })
-      .catch(function (error) {
-        // console.log(error.response);
-      });
+    setIsLoading(false);
   };
 
   useEffect(() => {
+    setIsLoading(true);
     onUserData();
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
-  }, []);
+  }, [isFocused]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size={"large"} />
+      </View>
+    );
+  }
+
+  console.log('user?.userNotes?.length',user?.userNotes?.length);
+  
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
@@ -83,23 +81,34 @@ export default function NoteScreen() {
             <Text style={{ color: "#2c93f6" }}>Filters</Text>
           </TouchableOpacity>
         </View>
-        {user?.userEvent?.length !== 0 && (
+        {user?.userNotes?.length !== 0 && (
           <>
             <View style={styles.searchView}>
               <AntDesign name="search1" color="gray" size={20} />
               <TextInput placeholder="Search notes" style={styles.textInput} />
             </View>
-            <FlatList
-              data={user?.userEvent}
+           {user?.userNotes?.length > 0 && <FlatList
+              data={user?.userNotes}
               renderItem={({ item }) => {
+                console.log("item", item);
+
                 return (
-                  <TouchableOpacity onPress={()=>navigationRef.navigate("NoteEditScreen")} style={styles.listView}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigationRef.navigate("NoteEditScreen", {
+                        newaddting: false,
+                      })
+                    }
+                    style={styles.listView}
+                  >
                     <View style={styles.topView}>
                       <View style={styles.leftView}>
                         <Text style={styles.topTextStyle}>
-                          {moment(item.date).format("MMMM DD YYYY, hh:MM a")}
+                          {`${item.date} ${item.time}`}
                         </Text>
-                        <Text style={styles.topSubTextStyle}>{item?.fieldName}</Text>
+                        <Text style={styles.topSubTextStyle}>
+                          {item?.fieldName}
+                        </Text>
                       </View>
                       <Ionicons
                         name="share-outline"
@@ -107,17 +116,31 @@ export default function NoteScreen() {
                         size={22}
                       />
                     </View>
-                    <View style={styles.bodyView}></View>
-                    <Text style={styles.bottomText}>comment</Text>
+                    <View style={styles.bodyView}>
+                      <MapView
+                         provider={"google"} 
+                        style={styles.map}
+                        
+                      >
+                        {/* <Mapbox.Camera
+                          defaultSettings={{
+                            // centerCoordinate: [77.37503342574126, 17.130181329213883],
+                            centerCoordinate: [-84.270172, 38.206348],
+                            zoomLevel: 5,
+                          }}
+                        /> */}
+                      </MapView>
+                    </View>
+                    <Text style={styles.bottomText}>{item?.cooment}</Text>
                   </TouchableOpacity>
                 );
               }}
-            />
+            />}
           </>
         )}
       </View>
 
-      {user?.userEvent?.length == 0 && (
+      {user?.userNotes?.length == 0 && (
         <View
           style={{ flex: 1, justifyContent: "center", paddingHorizontal: 15 }}
         >
@@ -131,7 +154,11 @@ export default function NoteScreen() {
             an important place on the map
           </Text>
 
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              user?.userEvent?.length === 0 ? alert("Please first add field and then add notes")  : navigationRef.navigate("NoteEditScreen", { newaddting: true });
+            }}
+          >
             <Text
               style={{
                 color: "#2c93f6",
@@ -195,10 +222,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     marginVertical: 10,
+    overflow:'hidden'
   },
   bottomText: {
     fontSize: 18,
     color: "#000",
     fontWeight: "400",
   },
+  map:{
+    flex:1
+  }
 });

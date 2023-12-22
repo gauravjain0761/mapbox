@@ -295,6 +295,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import React, {
   useState,
@@ -310,6 +311,7 @@ import BottomModal from "../common/modal/BottomModal";
 import BottomFieldModal from "../common/modal/BottomFieldModal";
 import axios from "axios";
 import WebView from "react-native-webview";
+import { useIsFocused } from "@react-navigation/native";
 
 Mapbox.setAccessToken(
   "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
@@ -395,7 +397,7 @@ const CrosshairOverlay = ({
 };
 
 const lineLayerStyle = {
-  lineColor: "#fff",
+  lineColor: "red",
   lineWidth: 2,
 };
 
@@ -427,13 +429,15 @@ const Polygon = ({ coordinates }: { coordinates: Position[] }) => {
 const HomeScreen = () => {
   const userData = firebase.auth().currentUser;
   const [isModalOpen, setModalOpen] = React.useState<boolean>(false);
+  const isFocused = useIsFocused();
 
   const [coordinates, setCoordinates] = useState<Position[]>([]);
   const [lastCoordinate, setLastCoordinate] = useState<Position>([0, 0]);
   const [started, setStarted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [crosshairPos, setCrosshairPos] = useState([0, 0]);
   const [user, setUser] = useState([]);
-  const [initializing, setInitializing] = useState(true);
+
   const [fieldName, setFieldName] = useState("");
   const [selectDate, setSelectDate] = useState(new Date());
   const [selectMapView, setSelectMapView] = useState(false);
@@ -446,28 +450,9 @@ const HomeScreen = () => {
   });
   const [webView, setWebView] = useState("");
 
-  function onAuthStateChanged(user) {
-    if (initializing) setInitializing(false);
-  }
+  console.log("user", user);
 
-  useEffect(()=>{
-    var config = {
-      method: "GET",
-      url: "http://143.244.177.79:5431/get_final_geometry/",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-
-    axios(config)
-      .then(function (response) {
-        setWebView(response?.data);
-      })
-      .catch(function (error) {
-        // console.log(error.response);
-      });
-  },[])
-
+  console.log("userData", userData?.uid);
 
   const onUserData = async () => {
     const firestoreDocument = await firestore()
@@ -481,32 +466,54 @@ const HomeScreen = () => {
     updatedUser?.userEvent?.map((item) => {
       userUpdate.push(JSON.parse(item.latLong));
     });
-    var data = JSON.stringify({
-      lats_longs: userUpdate,
-    });
-    var config = {
-      method: "post",
-      url: "http://143.244.177.79:5431/get_final_geometry/",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: data,
-    };
 
-    axios(config)
-      .then(function (response) {
-        setWebView(response?.data);
-      })
-      .catch(function (error) {
-        // console.log(error.response);
+    if (updatedUser?.userEvent?.length == 0) {
+      var config = {
+        method: "GET",
+        url: "http://143.244.177.79:5431/get_final_geometry/",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      axios(config)
+        .then(function (response) {
+          setWebView(response?.data);
+        })
+        .catch(function (error) {
+          // console.log(error.response);
+        });
+    } else {
+      var data = JSON.stringify({
+        lats_longs: userUpdate,
       });
+      const config = {
+        method: "post",
+        url: "http://143.244.177.79:5431/get_final_geometry/",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: data,
+      };
+
+      axios(config)
+        .then(function (response) {
+          setWebView(response?.data);
+          setIsLoading(false);
+        })
+        .catch(function (error) {
+          setIsLoading(false);
+          // console.log(error.response);
+        });
+    }
+    setIsLoading(false);
   };
 
   useEffect(() => {
+    setIsLoading(true);
+
     onUserData();
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
-  }, [isModalOpen]);
+  }, [isModalOpen, isFocused, userData]);
 
   const coordinatesWithLast = useMemo(() => {
     return [...coordinates, lastCoordinate];
@@ -549,24 +556,31 @@ const HomeScreen = () => {
       .doc(userData?.uid)
       .update(updateValue)
       .then(async (res) => {
-        setSelectMapView(false)
+        setSelectMapView(false);
         setModalOpen(false);
         setStarted(false);
-        setCoordinates([]), 
-        setLastCoordinate([0, 0]);
+        setCoordinates([]), setLastCoordinate([0, 0]);
         setFieldName("");
       });
   };
 
-  const onDeletePree=()=>{
+  const onDeletePree = () => {
     firestore()
-    .collection("Users")
-    .doc(userData?.uid)
-    .update({userEvent:[]})
-    .then(async (res) => {
-      onUserData();
-      setSelectMapView(true)
-    });
+      .collection("Users")
+      .doc(userData?.uid)
+      .update({ userEvent: [] })
+      .then(async (res) => {
+        onUserData();
+        setSelectMapView(true);
+      });
+  };
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size={"large"}/>
+      </View>
+    );
   }
 
   if (selectMapView) {
@@ -589,7 +603,8 @@ const HomeScreen = () => {
           >
             <Mapbox.Camera
               defaultSettings={{
-                centerCoordinate: [77.37503342574126, 17.130181329213883],
+                // centerCoordinate: [77.37503342574126, 17.130181329213883],
+                centerCoordinate: [-84.270172, 38.206348],
                 zoomLevel: 5,
               }}
             />
@@ -661,34 +676,49 @@ const HomeScreen = () => {
     );
   } else {
     return (
-      <>
+      <View style={{ flex: 1 }}>
         <WebView
           source={{ html: webView }}
           style={{ flex: 1 }}
           injectedJavaScriptForMainFrameOnly={true}
           originWhitelist={["*"]}
           javaScriptEnabled={true}
-          domStorageEnabled
           startInLoadingState
           mixedContentMode="always"
+          allowFileAccess={true}
+          domStorageEnabled={true}
+          allowUniversalAccessFromFileURLs={true}
+          allowFileAccessFromFileURLs={true}
         />
-        <TouchableOpacity style={[styles.btnStyle,{ backgroundColor: user?.userEvent?.length == 0 ? "green" : "red",}]} onPress={()=>{
-          if(user?.userEvent?.length == 0){
-            setSelectMapView(true)
-          }else{
-            Alert.alert('', 'Are you sure you want to Delete', [
+        {!isLoading && (
+          <TouchableOpacity
+            style={[
+              styles.btnStyle,
               {
-                text: 'Cancel',
-                onPress: () => console.log('Cancel Pressed'),
-                style: 'cancel',
+                backgroundColor: user?.userEvent?.length == 0 ? "green" : "red",
               },
-              {text: 'Ok', onPress: () => onDeletePree()},
-            ]);
-          }
-        }}>
-          <Text style={styles.btnTextStyle}>{user?.userEvent?.length ==0 ? "Add Field"  :"Delete Field" } </Text>
-        </TouchableOpacity>
-      </>
+            ]}
+            onPress={() => {
+              if (user?.userEvent?.length == 0) {
+                setSelectMapView(true);
+              } else {
+                Alert.alert("", "Are you sure you want to Delete", [
+                  {
+                    text: "Cancel",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel",
+                  },
+                  { text: "Ok", onPress: () => onDeletePree() },
+                ]);
+              }
+            }}
+          >
+            <Text style={styles.btnTextStyle}>
+              {user?.userEvent?.length == 0 ? "Add Field" : "Delete Field"}{" "}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
     );
   }
 };
@@ -728,7 +758,7 @@ const styles = StyleSheet.create({
   btnStyle: {
     position: "absolute",
     top: 10,
-   
+
     right: 10,
     width: 130,
     height: 40,

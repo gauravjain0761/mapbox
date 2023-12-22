@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import VUtils from "../common/VUtils";
 import axios from "axios";
@@ -12,6 +12,7 @@ export default function InsightScreen() {
   const [currentTime, setCurrentTime] = React.useState(Date.now());
   const [user, setUser] = useState([]);
   const [initializing, setInitializing] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   setTimeout(() => {
     setCurrentTime(Date.now() + 1);
@@ -22,6 +23,7 @@ export default function InsightScreen() {
   }
 
   const onUserData = async () => {
+
     const firestoreDocument = await firestore()
       .collection("Users")
       .doc(userData?.uid)
@@ -47,18 +49,28 @@ export default function InsightScreen() {
 
     axios(config)
       .then(function (response) {
+        
         // setWebView(response?.data);
       })
       .catch(function (error) {
         // console.log(error.response);
       });
+    setIsLoading(false)
+
   };
 
   useEffect(() => {
+    setIsLoading(true)
     onUserData();
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
   }, []);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size={"large"}/>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "white" }}>
