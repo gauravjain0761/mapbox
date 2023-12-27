@@ -4,8 +4,10 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import auth from "@react-native-firebase/auth";
 import { Style } from "@rnmapbox/maps";
+import { useNavigation } from "@react-navigation/native";
 
 export default function ProfileScreen() {
+  const {navigate}=useNavigation()
   const profileDetails: any = [
     // {
     //   name: "Settings",
@@ -16,6 +18,7 @@ export default function ProfileScreen() {
       name: 'Privacy policy',
       icon: <Ionicons name="desktop-outline" color="gray" size={26} />,
       mt: true,
+      onPress:()=>navigate("WebScreen",{screenName:'Privacy policy'})
     },
     {
       name: "Terms of use",
@@ -23,6 +26,7 @@ export default function ProfileScreen() {
         <Ionicons name="file-tray-stacked-outline" color="gray" size={26} />
       ),
       mt: false,
+      onPress:()=>navigate("WebScreen",{screenName:'Terms of use'})
     },
     // {
     //   name: 'Support Chat',
@@ -34,11 +38,13 @@ export default function ProfileScreen() {
       name: "User Guide",
       icon: <Ionicons name="copy-outline" size={26} color="gray" />,
       mt: false,
+      onPress:()=>navigate("WebScreen",{screenName:"User Guide"})
     },
     {
       name: "Telegram Community",
       icon: <Ionicons name="paper-plane-outline" size={26} color="gray" />,
       mt: true,
+      onPress:()=>navigate("WebScreen",{screenName:"Telegram Community"})
     },
     // {
     //   name: 'Share app',

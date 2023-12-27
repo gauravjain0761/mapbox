@@ -29,7 +29,9 @@ export default function VTextField({
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
-              style={style}
+              style={{    borderWidth: 1,
+                borderColor: '#ededed',
+                borderRadius: 3,}}
               {...componentProps}
             />
           </View>

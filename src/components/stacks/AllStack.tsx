@@ -5,6 +5,7 @@ import { dataStore } from '../globalState/store';
 import PublicRoutes from '../publicScreens/PublicRoutes';
 import SplashScreen from '../splash/SplashScreen';
 import auth from "@react-native-firebase/auth";
+import WebScreen from '../profile/WebScreen';
 
 export default function AllStack() {
   const Stack = createNativeStackNavigator();
@@ -52,6 +53,8 @@ export default function AllStack() {
         screenOptions={{ headerShown: false }}>
         {/* <Stack.Scrpeen name="SplashScreen" component={SplashScreen} /> */}
         <Stack.Screen name="TabScreen" component={TabScreen} />
+        <Stack.Screen name="WebScreen" component={WebScreen} />
+
       </Stack.Navigator>
     </>
   );

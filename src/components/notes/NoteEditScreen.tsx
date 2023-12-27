@@ -258,12 +258,14 @@ const NoteEditScreen = () => {
         startInLoadingState
         mixedContentMode="always"
       />
-      <SafeAreaView>
+      <SafeAreaView style={{}}>
         <Modalize
           ref={modalizeRef}
           // alwaysOpen={300}
           modalHeight={600}
           snapPoint={300}
+          alwaysOpen={400}
+          
         >
           {params?.newaddting ? (
             <View style={{ marginTop: 18 }}>

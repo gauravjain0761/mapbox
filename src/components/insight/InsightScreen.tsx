@@ -6,6 +6,7 @@ import axios from "axios";
 import auth, { firebase } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import moment from "moment";
+import MapView from "react-native-maps";
 
 export default function InsightScreen() {
   const userData = firebase.auth().currentUser;
@@ -73,11 +74,12 @@ export default function InsightScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "white" }}>
-      <View style={{ backgroundColor: "#f0f0f0f0" }}>
-        <Text style={{ color: "black", padding: 15, textAlign: "center" }}>
-          It is {VUtils.showTime(currentTime, "h:mm:ss a")} on{" "}
-          {VUtils.showTime(currentTime, "MMMM D")}
+    <View style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
+      <View style={{ backgroundColor: "#fff" }}>
+        <Text style={{ color: "black", padding: 18, textAlign: "center" }}>
+          {/* It is {VUtils.showTime(currentTime, "h:mm:ss a")} on{" "}
+          {VUtils.showTime(currentTime, "MMMM D")} */}
+          Insight
         </Text>
       </View>
 
@@ -91,13 +93,13 @@ export default function InsightScreen() {
               marginTop: 10,
             }}
           >
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[styles.btnStyle, { backgroundColor: "#2b2b08" }]}
             >
               <Text style={[styles.btnTextStyle, { color: "#fff" }]}>
                 All fields
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             {/* <TouchableOpacity
               style={[styles.btnStyle, { backgroundColor: "#cccccc" }]}
             >
@@ -107,16 +109,20 @@ export default function InsightScreen() {
           {user?.userEvent?.map((item: any) => {
             return (
               <View style={styles.listView}>
-                <View style={styles.leftView} />
+                <View style={styles.leftView} >
+                <MapView provider={"google"} style={styles.map}>
+                      
+                      </MapView>
+                </View>
                 <View style={styles.bodyView}>
-                  <Text style={styles.bodyText}>{item?.fieldName}, 1.77ha</Text>
+                  <Text style={styles.bodyText}>{item?.fieldName}</Text>
                   {/* <Text style={styles.bodySubText}>Cotton</Text> */}
                 </View>
                 <View style={styles.rightView}>
                   <Text style={styles.rightText}>
-                    {moment(item?.date).format("MMM DD")}
+                    {moment(item?.date).format("MMMM DD YYYY")}
                   </Text>
-                  <Text style={styles.rightSubText}>0.26</Text>
+                  <Text style={styles.rightSubText}> {moment(item?.date).format("hh:mm a")}</Text>
                 </View>
               </View>
             );
@@ -163,6 +169,9 @@ export default function InsightScreen() {
 }
 
 const styles = StyleSheet.create({
+  map: {
+    flex: 1,
+  },
   btnStyle: {
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -178,9 +187,9 @@ const styles = StyleSheet.create({
   },
 
   leftView: {
-    borderWidth: 1,
-    width: 90,
-    height: 60,
+    // borderWidth: 1,
+    width: 100,
+    height: 65,
   },
   bodyView: {
     // flexDirection: "row",

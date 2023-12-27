@@ -1,77 +1,67 @@
-import React from 'react';
-import {KeyboardAvoidingView, Text, View} from 'react-native';
-import VTextField from '../common/inputs/VTextField';
-import LoggedInFbGoogle from './LoggedInFbGoogle';
+import React from "react";
+import { KeyboardAvoidingView, Text, TextInput, View } from "react-native";
+import VTextField from "../common/inputs/VTextField";
+import LoggedInFbGoogle from "./LoggedInFbGoogle";
 
 type IProps = {
   control: any;
+  value: any;
+  email: any;
+  emailChange: any;
+  passwordChange: any;
+  password: any;
 };
 export default function PublicInputs(props: IProps) {
-  const {control} = props;
+  const { control, email, emailChange, password, passwordChange } = props;
   const EMAIL_REGEX =
     /^[a-zA-Z0-9.!#$%&’+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)$/;
 
   return (
     <View>
       <KeyboardAvoidingView>
-        <View style={{paddingHorizontal: 15}}>
+        <View style={{ paddingHorizontal: 15 }}>
           <Text
             style={{
               marginTop: 10,
-              fontWeight: 'bold',
-              color: 'black',
+              fontWeight: "bold",
+              color: "black",
               fontSize: 12,
-            }}>
+              marginBottom:5
+            }}
+          >
             E-Mail
           </Text>
-          <VTextField
-            name="email"
-            control={control}
-            style={{
-              borderWidth: 1,
-              borderColor: '#ededed',
-              borderRadius: 3,
-            }}
-            componentProps={{
-              placeholder: 'Enter e-mail address',
-            }}
-            rules={{
-              required: 'E-mail is required',
-              pattern: {
-                value: EMAIL_REGEX,
-                message: 'E-mail is invalid!',
-              },
-            }}
+          <TextInput
+            placeholderTextColor="#777777"
+            placeholder="Email"
+            value={email}
+            onChangeText={emailChange}
+            style={{ borderWidth: 1, borderColor: "#ededed", borderRadius: 3,paddingLeft:10 }}
           />
           <View>
             <Text
               style={{
                 marginTop: 10,
-                fontWeight: 'bold',
-                color: 'black',
+                fontWeight: "bold",
+                color: "black",
                 fontSize: 12,
-              }}>
+                marginBottom:5
+              }}
+            >
               Password
             </Text>
-            <VTextField
-              name="password"
-              control={control}
-              rules={{required: 'Password is required'}}
-              style={{
-                borderWidth: 1,
-                borderColor: '#ededed',
-                borderRadius: 3,
-              }}
-              componentProps={{
-                placeholder: 'Enter password',
-                secureTextEntry: true,
-              }}
+            <TextInput
+              placeholderTextColor="#777777"
+              placeholder="Password"
+              value={password}
+              onChangeText={passwordChange}
+              style={{ borderWidth: 1, borderColor: "#ededed", borderRadius: 3,paddingLeft:10 }}
             />
           </View>
         </View>
       </KeyboardAvoidingView>
-      <Text style={{paddingVertical: 15, textAlign: 'center'}}>or with</Text>
-      <LoggedInFbGoogle />
+      {/* <Text style={{paddingVertical: 15, textAlign: 'center'}}>or with</Text> */}
+      {/* <LoggedInFbGoogle /> */}
     </View>
   );
 }

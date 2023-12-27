@@ -33,7 +33,6 @@ export default function NoteScreen() {
   );
   Mapbox.setTelemetryEnabled(false);
 
-
   const onUserData = async () => {
     const firestoreDocument = await firestore()
       .collection("Users")
@@ -41,8 +40,8 @@ export default function NoteScreen() {
       .get();
 
     const updatedUser = firestoreDocument.data();
-    console.log('updatedUser',updatedUser);
-    
+    console.log("updatedUser", updatedUser);
+
     setUser(updatedUser);
     setIsLoading(false);
   };
@@ -60,8 +59,7 @@ export default function NoteScreen() {
     );
   }
 
-  console.log('user?.userNotes?.length',user?.userNotes?.length);
-  
+  console.log("user?.userNotes?.length", user?.userNotes?.length);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
@@ -70,16 +68,11 @@ export default function NoteScreen() {
           style={{
             backgroundColor: "white",
             padding: 15,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
           }}
         >
-          <View />
-          <Text style={{ color: "black", fontSize: 18, left: 25 }}>Notes</Text>
-          <TouchableOpacity>
-            <Text style={{ color: "#2c93f6" }}>Filters</Text>
-          </TouchableOpacity>
+          <Text style={{ color: "black", fontSize: 18, textAlign: "center" }}>
+            Notes
+          </Text>
         </View>
         {user?.userNotes?.length !== 0 && (
           <>
@@ -87,55 +80,47 @@ export default function NoteScreen() {
               <AntDesign name="search1" color="gray" size={20} />
               <TextInput placeholder="Search notes" style={styles.textInput} />
             </View>
-           {user?.userNotes?.length > 0 && <FlatList
-              data={user?.userNotes}
-              renderItem={({ item }) => {
-                console.log("item", item);
+            {user?.userNotes?.length > 0 && (
+              <FlatList
+                data={user?.userNotes}
+                renderItem={({ item }) => {
+                  console.log("item", item);
 
-                return (
-                  <TouchableOpacity
-                    onPress={() =>
-                      navigationRef.navigate("NoteEditScreen", {
-                        newaddting: false,
-                      })
-                    }
-                    style={styles.listView}
-                  >
-                    <View style={styles.topView}>
-                      <View style={styles.leftView}>
-                        <Text style={styles.topTextStyle}>
-                          {`${item.date} ${item.time}`}
-                        </Text>
-                        <Text style={styles.topSubTextStyle}>
-                          {item?.fieldName}
-                        </Text>
+                  return (
+                    <TouchableOpacity
+                      onPress={() =>
+                        navigationRef.navigate("NoteEditScreen", {
+                          newaddting: false,
+                        })
+                      }
+                      style={styles.listView}
+                    >
+                      <View style={styles.topView}>
+                        <View style={styles.leftView}>
+                          <Text style={styles.topTextStyle}>
+                            {`${item.date} ${item.time}`}
+                          </Text>
+                          <Text style={styles.topSubTextStyle}>
+                            {item?.fieldName}
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name="share-outline"
+                          color="#2c93f6"
+                          size={22}
+                        />
                       </View>
-                      <Ionicons
-                        name="share-outline"
-                        color="#2c93f6"
-                        size={22}
-                      />
-                    </View>
-                    <View style={styles.bodyView}>
-                      <MapView
-                         provider={"google"} 
-                        style={styles.map}
-                        
-                      >
-                        {/* <Mapbox.Camera
-                          defaultSettings={{
-                            // centerCoordinate: [77.37503342574126, 17.130181329213883],
-                            centerCoordinate: [-84.270172, 38.206348],
-                            zoomLevel: 5,
-                          }}
-                        /> */}
-                      </MapView>
-                    </View>
-                    <Text style={styles.bottomText}>{item?.cooment}</Text>
-                  </TouchableOpacity>
-                );
-              }}
-            />}
+                      <View style={styles.bodyView}>
+                        <MapView provider={"google"} style={styles.map}>
+                      
+                        </MapView>
+                      </View>
+                      <Text style={styles.bottomText}>{item?.cooment}</Text>
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            )}
           </>
         )}
       </View>
@@ -156,7 +141,11 @@ export default function NoteScreen() {
 
           <TouchableOpacity
             onPress={() => {
-              user?.userEvent?.length === 0 ? alert("Please first add field and then add notes")  : navigationRef.navigate("NoteEditScreen", { newaddting: true });
+              user?.userEvent?.length === 0
+                ? alert("Please first add field and then add notes")
+                : navigationRef.navigate("NoteEditScreen", {
+                    newaddting: true,
+                  });
             }}
           >
             <Text
@@ -222,14 +211,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     marginVertical: 10,
-    overflow:'hidden'
+    overflow: "hidden",
   },
   bottomText: {
     fontSize: 18,
     color: "#000",
     fontWeight: "400",
   },
-  map:{
-    flex:1
-  }
+  map: {
+    flex: 1,
+  },
 });
