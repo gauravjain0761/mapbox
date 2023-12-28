@@ -88,7 +88,7 @@ export default function FirstScreen(props: any) {
           style={{alignItems: 'center', marginTop: 10}}
           onPress={() => VUtils.navigate(props.navigation, 'SignIn')}>
           <Text style={{color: '#2f80dc'}}>
-            I've already signed up, Sign in
+            I've already Signed up, Sign in
           </Text>
         </TouchableOpacity>
       </View>

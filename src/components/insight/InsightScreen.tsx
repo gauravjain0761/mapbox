@@ -7,6 +7,7 @@ import auth, { firebase } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import moment from "moment";
 import MapView from "react-native-maps";
+import { useIsFocused } from "@react-navigation/native";
 
 export default function InsightScreen() {
   const userData = firebase.auth().currentUser;
@@ -14,6 +15,7 @@ export default function InsightScreen() {
   const [user, setUser] = useState([]);
   const [initializing, setInitializing] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const isFocused = useIsFocused();
 
   setTimeout(() => {
     setCurrentTime(Date.now() + 1);
@@ -63,7 +65,7 @@ export default function InsightScreen() {
   useEffect(() => {
     setIsLoading(true)
     onUserData();
-  }, []);
+  }, [isFocused]);
 
   if (isLoading) {
     return (
@@ -120,9 +122,9 @@ export default function InsightScreen() {
                 </View>
                 <View style={styles.rightView}>
                   <Text style={styles.rightText}>
-                    {moment(item?.date).format("MMMM DD YYYY")}
+                    {item?.date}
                   </Text>
-                  <Text style={styles.rightSubText}> {moment(item?.date).format("hh:mm a")}</Text>
+                  <Text style={styles.rightSubText}> {item?.time}</Text>
                 </View>
               </View>
             );

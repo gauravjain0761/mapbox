@@ -312,6 +312,7 @@ import BottomFieldModal from "../common/modal/BottomFieldModal";
 import axios from "axios";
 import WebView from "react-native-webview";
 import { useIsFocused } from "@react-navigation/native";
+import moment from "moment";
 
 Mapbox.setAccessToken(
   "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
@@ -319,6 +320,7 @@ Mapbox.setAccessToken(
 Mapbox.setTelemetryEnabled(false);
 
 type Position = [number, number];
+
 
 type CrosshairProps = {
   size: number;
@@ -449,7 +451,7 @@ const HomeScreen = () => {
     },
   });
   const [webView, setWebView] = useState("");
-
+  const camera = useRef(null);
   console.log("user", user);
 
   console.log("userData", userData?.uid);
@@ -536,7 +538,8 @@ const HomeScreen = () => {
             ...updatedUser?.userEvent,
             {
               fieldName: fieldName,
-              date: selectDate,
+              date: moment(selectDate).format("MMMM DD YYYY"),
+              time:moment(selectDate).format("hh:mm a"),
               latLong: JSON.stringify(coordinatesWithLast),
             },
           ],
@@ -557,6 +560,9 @@ const HomeScreen = () => {
       .update(updateValue)
       .then(async (res) => {
         setSelectMapView(false);
+        camera.current?.setCamera({
+          centerCoordinate: [-84.270172, 38.206348],
+        });
         setModalOpen(false);
         setStarted(false);
         setCoordinates([]), setLastCoordinate([0, 0]);
@@ -572,13 +578,17 @@ const HomeScreen = () => {
       .then(async (res) => {
         onUserData();
         setSelectMapView(true);
+        camera.current?.setCamera({
+          centerCoordinate: [-84.270172, 38.206348],
+        });
+       
       });
   };
 
   if (isLoading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size={"large"}/>
+        <ActivityIndicator size={"large"} />
       </View>
     );
   }
@@ -589,10 +599,13 @@ const HomeScreen = () => {
         <View style={{ flex: 1 }}>
           <Mapbox.MapView
             styleURL="mapbox://styles/mapbox/streets-v11"
-            ref={map}
             style={styles.map}
+            
             onPress={async (e) => {
               setStarted(true);
+              camera.current?.setCamera({
+                centerCoordinate: [-84.270172, 38.206348],
+              });
               setLastCoordinate(e?.geometry?.coordinates as Position);
               setCoordinates([...coordinates, e?.geometry?.coordinates]);
             }}
@@ -602,6 +615,7 @@ const HomeScreen = () => {
             onCameraChanged={async (e) => {}}
           >
             <Mapbox.Camera
+              ref={camera}
               defaultSettings={{
                 // centerCoordinate: [77.37503342574126, 17.130181329213883],
                 centerCoordinate: [-84.270172, 38.206348],
@@ -670,6 +684,7 @@ const HomeScreen = () => {
             fieldName={fieldName}
             setFieldName={(text) => setFieldName(text)}
             selectDate={selectDate}
+            setSelectDate={(text)=>setSelectDate(text)}
           />
         </View>
       </View>
@@ -701,6 +716,9 @@ const HomeScreen = () => {
             onPress={() => {
               if (user?.userEvent?.length == 0) {
                 setSelectMapView(true);
+                camera.current?.setCamera({
+                  centerCoordinate: [-84.270172, 38.206348],
+                });
               } else {
                 Alert.alert("", "Are you sure you want to Delete", [
                   {

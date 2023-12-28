@@ -77,13 +77,9 @@ const BottomFieldModal = ({
                     display={Platform.OS === "ios" ? "spinner" : "calendar"}
                     maximumDate={new Date()}
                     value={selectDate}
-                    onChange={(res) => {
+                    onChange={(e, d) => {
                       setIsShowDatePicker(false);
-                      if (res?.type === "set") {
-                        setSelectDate(
-                          moment(res?.nativeEvent?.timestamp).toDate()
-                        );
-                      }
+                      setSelectDate(d);
                     }}
                   />
                 </View>
@@ -128,19 +124,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginHorizontal: 16,
     marginBottom: 18,
-    flex:1
+    flex: 1,
   },
   bodyText: {
     fontSize: 18,
     fontWeight: "600",
-    flex:1
+    flex: 1,
   },
   bodyInput: {
     fontSize: 18,
     fontWeight: "600",
-    flex:0.3,
-    marginRight:10,
-
+    flex: 0.3,
+    marginRight: 10,
   },
   dateText: {
     fontSize: 18,
