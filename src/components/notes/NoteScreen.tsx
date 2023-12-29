@@ -27,6 +27,8 @@ export default function NoteScreen() {
   const [user, setUser] = useState([]);
   const [initializing, setInitializing] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [filteredUsers, setFilteredUsers] = useState(user?.userNotes);
+  const [searchItem, setSearchItem] = useState("");
 
   Mapbox.setAccessToken(
     "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
@@ -40,8 +42,6 @@ export default function NoteScreen() {
       .get();
 
     const updatedUser = firestoreDocument.data();
-    console.log("updatedUser", updatedUser);
-
     setUser(updatedUser);
     setIsLoading(false);
   };
@@ -50,6 +50,24 @@ export default function NoteScreen() {
     setIsLoading(true);
     onUserData();
   }, [isFocused]);
+
+  useEffect(()=>{
+    setFilteredUsers(user?.userNotes);
+  },[user])
+
+  const filterSearch = (text) => {
+    setSearchItem(text)
+    const filteredItems = user?.userNotes?.filter((user) =>
+      user?.fieldName?.toLowerCase().includes(text?.toLowerCase()) ||
+      user?.cooment?.toLowerCase().includes(text?.toLowerCase()) 
+    );
+
+    setFilteredUsers(filteredItems);
+  };
+
+
+  console.log('filteredUsers',filteredUsers);
+  
 
   if (isLoading) {
     return (
@@ -78,11 +96,18 @@ export default function NoteScreen() {
           <>
             <View style={styles.searchView}>
               <AntDesign name="search1" color="gray" size={20} />
-              <TextInput placeholder="Search notes" style={styles.textInput} />
+              <TextInput
+                placeholder="Search notes"
+                style={styles.textInput}
+                value={searchItem}
+                onChangeText={(text)=>{
+                  filterSearch(text)
+                }}
+              />
             </View>
-            {user?.userNotes?.length > 0 && (
+            {filteredUsers?.length > 0 && (
               <FlatList
-                data={user?.userNotes}
+                data={filteredUsers}
                 renderItem={({ item }) => {
                   console.log("item", item);
 
@@ -111,9 +136,10 @@ export default function NoteScreen() {
                         />
                       </View>
                       <View style={styles.bodyView}>
-                        <MapView provider={"google"} style={styles.map}>
-                      
-                        </MapView>
+                        <MapView
+                          provider={"google"}
+                          style={styles.map}
+                        ></MapView>
                       </View>
                       <Text style={styles.bottomText}>{item?.cooment}</Text>
                     </TouchableOpacity>
