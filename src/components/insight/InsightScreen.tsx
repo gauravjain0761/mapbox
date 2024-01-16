@@ -43,7 +43,7 @@ export default function InsightScreen() {
     });
     var config = {
       method: "post",
-      url: "http://143.244.177.79:5431/get_final_geometry/",
+      url: "http://143.198.226.104:5431/get_final_geometry/",
       headers: {
         "Content-Type": "application/json",
       },
