@@ -1,13 +1,24 @@
-import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AntDesign from "react-native-vector-icons/AntDesign";
-import auth from "@react-native-firebase/auth";
 import { Style } from "@rnmapbox/maps";
-import { useNavigation } from "@react-navigation/native";
-
+import { useIsFocused, useNavigation } from "@react-navigation/native";
+import auth, { firebase } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 export default function ProfileScreen() {
-  const {navigate}=useNavigation()
+  const { navigate } = useNavigation();
+  const userData = firebase.auth().currentUser;
+  const [user, setUser] = useState([]);
+  const isFocused = useIsFocused();
+  const [isLoading, setIsLoading] = useState(false);
+
   const profileDetails: any = [
     // {
     //   name: "Settings",
@@ -15,10 +26,10 @@ export default function ProfileScreen() {
     //   mt: false,
     // },
     {
-      name: 'Privacy policy',
+      name: "Privacy policy",
       icon: <Ionicons name="desktop-outline" color="gray" size={26} />,
       mt: true,
-      onPress:()=>navigate("WebScreen",{screenName:'Privacy policy'})
+      onPress: () => navigate("WebScreen", { screenName: "Privacy policy" }),
     },
     {
       name: "Terms of use",
@@ -26,7 +37,7 @@ export default function ProfileScreen() {
         <Ionicons name="file-tray-stacked-outline" color="gray" size={26} />
       ),
       mt: false,
-      onPress:()=>navigate("WebScreen",{screenName:'Terms of use'})
+      onPress: () => navigate("WebScreen", { screenName: "Terms of use" }),
     },
     // {
     //   name: 'Support Chat',
@@ -38,13 +49,14 @@ export default function ProfileScreen() {
       name: "User Guide",
       icon: <Ionicons name="copy-outline" size={26} color="gray" />,
       mt: false,
-      onPress:()=>navigate("WebScreen",{screenName:"User Guide"})
+      onPress: () => navigate("WebScreen", { screenName: "User Guide" }),
     },
     {
       name: "Telegram Community",
       icon: <Ionicons name="paper-plane-outline" size={26} color="gray" />,
       mt: true,
-      onPress:()=>navigate("WebScreen",{screenName:"Telegram Community"})
+      onPress: () =>
+        navigate("WebScreen", { screenName: "Telegram Community" }),
     },
     // {
     //   name: 'Share app',
@@ -62,6 +74,36 @@ export default function ProfileScreen() {
       },
     },
   ];
+
+  const onUserData = async () => {
+    const firestoreDocument = await firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .get();
+
+    const updatedUser = firestoreDocument.data();
+    setUser(updatedUser);
+
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
+
+    onUserData();
+  }, [isFocused, userData]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size={"large"} />
+      </View>
+    );
+  }
+
+  
+  
+
   return (
     <View style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
       <View
@@ -85,7 +127,7 @@ export default function ProfileScreen() {
           <Ionicons name="leaf-outline" color="#fff" size={40} />
         </View>
         <View>
-          <Text style={{ fontSize: 18, color: "#000" }}>My Fields</Text>
+          <Text style={{ fontSize: 18, color: "#000" }}>{user?.email}</Text>
           <Text style={{ fontSize: 14, color: "#000", opacity: 0.7 }}>
             Owner
           </Text>

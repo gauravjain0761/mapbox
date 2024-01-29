@@ -65,7 +65,7 @@ const NoteEditScreen = () => {
   useEffect(() => {
     var config = {
       method: "GET",
-      url: "http://143.198.226.104:5431/get_final_geometry/",
+      url: "http://143.198.226.104:80/get_final_geometry/",
       headers: {
         "Content-Type": "application/json",
       },
@@ -108,7 +108,7 @@ const NoteEditScreen = () => {
     });
     var config = {
       method: "post",
-      url: "http://143.198.226.104:5431/get_final_geometry/",
+      url: "http://143.198.226.104:80/get_final_geometry/",
       headers: {
         "Content-Type": "application/json",
       },
