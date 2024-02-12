@@ -711,7 +711,7 @@ const HomeScreen = () => {
             style={[
               styles.btnStyle,
               {
-                backgroundColor: user?.userEvent?.length == 0 ? "green" : "red",
+                backgroundColor: user?.userEvent?.length == 0 ? "#EE82EE" : "red",
               },
             ]}
             onPress={() => {

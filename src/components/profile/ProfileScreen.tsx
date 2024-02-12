@@ -29,7 +29,7 @@ export default function ProfileScreen() {
       name: "Privacy policy",
       icon: <Ionicons name="desktop-outline" color="gray" size={26} />,
       mt: true,
-      onPress: () => navigate("WebScreen", { screenName: "Privacy policy" }),
+      onPress: () => navigate("WebScreen", { screenName: "Privacy policy",link:"https://en.wikipedia.org/wiki/Privacy_policy"  }),
     },
     {
       name: "Terms of use",
@@ -37,7 +37,7 @@ export default function ProfileScreen() {
         <Ionicons name="file-tray-stacked-outline" color="gray" size={26} />
       ),
       mt: false,
-      onPress: () => navigate("WebScreen", { screenName: "Terms of use" }),
+      onPress: () => navigate("WebScreen", { screenName: "Terms of use",link:"https://en.wikipedia.org/wiki/Privacy_policy" }),
     },
     // {
     //   name: 'Support Chat',
@@ -49,14 +49,14 @@ export default function ProfileScreen() {
       name: "User Guide",
       icon: <Ionicons name="copy-outline" size={26} color="gray" />,
       mt: false,
-      onPress: () => navigate("WebScreen", { screenName: "User Guide" }),
+      onPress: () => navigate("WebScreen", { screenName: "User Guide",link:"https://en.wikipedia.org/wiki/Privacy_policy" }),
     },
     {
       name: "Telegram Community",
       icon: <Ionicons name="paper-plane-outline" size={26} color="gray" />,
       mt: true,
       onPress: () =>
-        navigate("WebScreen", { screenName: "Telegram Community" }),
+        navigate("WebScreen", { screenName: "Telegram Community",link:'https://t.me/c/1806002977/1' }),
     },
     // {
     //   name: 'Share app',

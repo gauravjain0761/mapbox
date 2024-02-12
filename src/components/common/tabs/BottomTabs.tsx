@@ -40,7 +40,7 @@ export default function TabScreen() {
       screenOptions={({route}) => ({
         tabBarHideOnKeyboard: true,
         headerShown: false,
-        tabBarActiveTintColor: '#2aae62',
+        tabBarActiveTintColor: '#EE82EE',
         tabBarInactiveTintColor: 'gray',
       })}>
       <Tab.Screen

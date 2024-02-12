@@ -182,7 +182,7 @@ export default function SignIn() {
           >
             <TouchableOpacity
               style={{
-                backgroundColor: "green",
+                backgroundColor: "#EE82EE",
                 width: "90%",
                 borderRadius: 4,
               }}

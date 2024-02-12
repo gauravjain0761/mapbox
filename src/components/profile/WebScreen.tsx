@@ -28,7 +28,7 @@ export default function WebScreen() {
         </Text>
       </View>
       <WebView 
-        source={{ uri:'https://en.wikipedia.org/wiki/Privacy_policy' }}
+        source={{ uri:params.link }}
       />
     </View>
   );

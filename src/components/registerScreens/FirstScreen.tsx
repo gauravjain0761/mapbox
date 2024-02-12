@@ -23,7 +23,7 @@ export default function FirstScreen(props: any) {
         justifyContent: 'space-between',
         backgroundColor: 'white',
       }}>
-      <StatusBar backgroundColor="#27ae61" barStyle={'light-content'} />
+      <StatusBar backgroundColor="#EE82EE" barStyle={'light-content'} />
       <View
         style={{
           flexDirection: 'row',
@@ -37,7 +37,7 @@ export default function FirstScreen(props: any) {
                 borderWidth: 5,
                 borderRadius: 5,
                 marginLeft: 3,
-                borderColor: index === pageNo ? '#27ae61' : '#f0f0f0f0',
+                borderColor: index === pageNo ? '#EE82EE' : '#f0f0f0f0',
               }}
             />
           </React.Fragment>
@@ -69,7 +69,7 @@ export default function FirstScreen(props: any) {
         </Text>
         <TouchableOpacity
           style={{
-            backgroundColor: '#27ae61',
+            backgroundColor: '#EE82EE',
             padding: 17,
             alignItems: 'center',
             borderRadius: 10,
