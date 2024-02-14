@@ -12,6 +12,7 @@ import { Style } from "@rnmapbox/maps";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import auth, { firebase } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import { SafeAreaView } from "react-native-safe-area-context";
 export default function ProfileScreen() {
   const { navigate } = useNavigation();
   const userData = firebase.auth().currentUser;
@@ -105,7 +106,7 @@ export default function ProfileScreen() {
   
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
       <View
         style={{
           marginBottom: 40,
@@ -165,6 +166,6 @@ export default function ProfileScreen() {
           </React.Fragment>
         ))}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

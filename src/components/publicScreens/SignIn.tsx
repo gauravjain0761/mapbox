@@ -13,6 +13,7 @@ import PublicInputs from "./PublicInputs";
 import { setLoggedIn } from "../globalState/store";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignIn() {
   const [index, setIndex] = React.useState(0);
@@ -117,7 +118,7 @@ export default function SignIn() {
   }
 
   return (
-    <>
+    <SafeAreaView  style={{flex:1,backgroundColor: "white", width: "100%"}}>
       <View style={{ flex: 1, backgroundColor: "white", width: "100%" }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -201,6 +202,6 @@ export default function SignIn() {
           </View>
         </ScrollView>
       </View>
-    </>
+    </SafeAreaView>
   );
 }

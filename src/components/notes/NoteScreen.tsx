@@ -6,6 +6,7 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
+  StatusBar,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -18,6 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useIsFocused } from "@react-navigation/native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import Mapbox from "@rnmapbox/maps";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NoteScreen() {
   const navigationRef = useNavigation();
@@ -31,7 +33,7 @@ export default function NoteScreen() {
   const [searchItem, setSearchItem] = useState("");
 
   Mapbox.setAccessToken(
-    "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
+    "sk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xzbGtiZTFzMGdmYTJpbjIzN3k0bnlxaCJ9.QA8nG8R26zj9buRyiMlUTg"
   );
   Mapbox.setTelemetryEnabled(false);
 
@@ -80,7 +82,8 @@ export default function NoteScreen() {
   console.log("user?.userNotes?.length", user?.userNotes?.length);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
+    <>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
       <View style={{ backgroundColor: "#fff" }}>
         <View
           style={{
@@ -187,7 +190,8 @@ export default function NoteScreen() {
           </TouchableOpacity>
         </View>
       )}
-    </View>
+    </SafeAreaView>
+    </>
   );
 }
 

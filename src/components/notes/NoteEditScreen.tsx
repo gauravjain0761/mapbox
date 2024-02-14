@@ -2,6 +2,7 @@ import Mapbox, { Camera, LineLayer, MapView } from "@rnmapbox/maps";
 import {
   Alert,
   Button,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -23,9 +24,10 @@ import {
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
+import RNDateTimePicker from "@react-native-community/datetimepicker";
 
 Mapbox.setAccessToken(
-  "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
+  "sk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xzbGtiZTFzMGdmYTJpbjIzN3k0bnlxaCJ9.QA8nG8R26zj9buRyiMlUTg"
 );
 Mapbox.setTelemetryEnabled(false);
 
@@ -345,8 +347,9 @@ const NoteEditScreen = () => {
                 {showDatePicker && (
                   <DateTimePicker
                     value={new Date()}
+                    
                     mode="date"
-                    display="calendar"
+                    display="default"
                     onChange={(e, d) => {
                       setSelectDate(moment(d).format("MMMM DD YYYY"));
                       setShowDatePicker(false);
@@ -376,9 +379,10 @@ const NoteEditScreen = () => {
                 </TouchableOpacity>
                 {showTimePicker && (
                   <DateTimePicker
+                  testID="datePicker"
                     value={new Date()}
                     mode="time"
-                    display="clock"
+                    display="spinner"
                     onChange={(e, d) => {
                       setSelectTime(moment(d).format("HH:MM a"));
                       setShowTimePicker(false);
@@ -431,6 +435,7 @@ const NoteEditScreen = () => {
                       fontWeight: "400",
                       textAlign: "right",
                       marginRight: 16,
+                      paddingVertical: Platform.OS == 'ios' ? 18 :0
                       
                     }}
                   />
@@ -474,8 +479,9 @@ const NoteEditScreen = () => {
                 {showDatePicker && (
                   <DateTimePicker
                     value={new Date()}
-                    mode="date"
-                    display="calendar"
+                    mode={ "date"}
+                    
+                    display={Platform.OS == 'ios'  ? 'clock' :"calendar"}
                     onChange={(e, d) => {
                       setSelectDate(moment(d).format("MMMM DD YYYY"));
                       setShowDatePicker(false);

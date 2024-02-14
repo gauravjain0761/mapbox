@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -83,7 +84,7 @@ export default function InsightScreen() {
   console.log('user?.userEvent',user?.userEvent);
   
   return (
-    <View style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
       <View style={{ backgroundColor: "#fff" }}>
         <Text style={{ color: "black", padding: 18, textAlign: "center" }}>
           {/* It is {VUtils.showTime(currentTime, "h:mm:ss a")} on{" "}
@@ -169,7 +170,7 @@ export default function InsightScreen() {
           </TouchableOpacity>
         </>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 

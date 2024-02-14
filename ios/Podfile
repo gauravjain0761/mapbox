@@ -28,16 +28,18 @@ end
 $RNMapboxMapsImpl = 'mapbox'
 #  $RNMapboxMapsVersion = '~> 10.0.15' 
 target 'poc' do
- 
-
+  use_frameworks! :linkage => :static
   config = use_native_modules!
-  pre_install do |installer|
-    $RNMapboxMaps.pre_install(installer)
-  end
   pod 'Firebase', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
   pod 'FirebaseCoreInternal', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
+  $RNFirebaseAsStaticFramework = true
+
+  pre_install do |installer|
+    $RNMapboxMaps.pre_install(installer)
+  end
+ 
 
   # Flags change depending on the env values.
   flags = get_default_flags()
@@ -51,7 +53,7 @@ target 'poc' do
     #
     # Note that if you have use_frameworks! enabled, Flipper will not work and
     # you should disable the next line.
-    :flipper_configuration => flipper_config,
+    # :flipper_configuration => flipper_config,
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )

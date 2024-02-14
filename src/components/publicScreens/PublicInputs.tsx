@@ -1,5 +1,5 @@
 import React from "react";
-import { KeyboardAvoidingView, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
 import VTextField from "../common/inputs/VTextField";
 import LoggedInFbGoogle from "./LoggedInFbGoogle";
 
@@ -26,7 +26,7 @@ export default function PublicInputs(props: IProps) {
               fontWeight: "bold",
               color: "black",
               fontSize: 12,
-              marginBottom:5
+              marginBottom: 5,
             }}
           >
             E-Mail
@@ -36,7 +36,13 @@ export default function PublicInputs(props: IProps) {
             placeholder="Email"
             value={email}
             onChangeText={emailChange}
-            style={{ borderWidth: 1, borderColor: "#ededed", borderRadius: 3,paddingLeft:10 }}
+            style={{
+              borderWidth: 1,
+              borderColor: "#ededed",
+              borderRadius: 3,
+              paddingLeft: 10,
+              paddingVertical:Platform.OS == 'ios' ? 20:0
+            }}
           />
           <View>
             <Text
@@ -45,7 +51,7 @@ export default function PublicInputs(props: IProps) {
                 fontWeight: "bold",
                 color: "black",
                 fontSize: 12,
-                marginBottom:5
+                marginBottom: 5,
               }}
             >
               Password
@@ -55,7 +61,14 @@ export default function PublicInputs(props: IProps) {
               placeholder="Password"
               value={password}
               onChangeText={passwordChange}
-              style={{ borderWidth: 1, borderColor: "#ededed", borderRadius: 3,paddingLeft:10 }}
+              style={{
+                borderWidth: 1,
+                borderColor: "#ededed",
+                borderRadius: 3,
+                paddingLeft: 10,
+              paddingVertical:Platform.OS == 'ios' ? 20:0
+
+              }}
             />
           </View>
         </View>

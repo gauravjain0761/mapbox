@@ -296,6 +296,7 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import React, {
   useState,
@@ -313,14 +314,14 @@ import axios from "axios";
 import WebView from "react-native-webview";
 import { useIsFocused } from "@react-navigation/native";
 import moment from "moment";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 Mapbox.setAccessToken(
-  "pk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xrdDg5MjJiMDE1NzNkbzloYWJoYTd0MyJ9.OBRDXcu-2A_GdNsk5UJf6g"
+  "sk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xzbGtiZTFzMGdmYTJpbjIzN3k0bnlxaCJ9.QA8nG8R26zj9buRyiMlUTg"
 );
 Mapbox.setTelemetryEnabled(false);
 
 type Position = [number, number];
-
 
 type CrosshairProps = {
   size: number;
@@ -475,15 +476,20 @@ const HomeScreen = () => {
         url: "http://143.198.226.104:80/get_final_geometry/",
         headers: {
           "Content-Type": "application/json",
+          Accept: 'Application/json',
+          Authorization: "jwt",
         },
+        data: {},
       };
 
       axios(config)
         .then(function (response) {
+          console.log('response?.data',response?.data);
+          
           setWebView(response?.data);
         })
         .catch(function (error) {
-          // console.log(error.response);
+          console.log("error.response",error.response);
         });
     } else {
       var data = JSON.stringify({
@@ -494,6 +500,8 @@ const HomeScreen = () => {
         url: "http://143.198.226.104:80/get_final_geometry/",
         headers: {
           "Content-Type": "application/json",
+          Accept: 'Application/json',
+          Authorization: "jwt",
         },
         data: data,
       };
@@ -505,7 +513,7 @@ const HomeScreen = () => {
         })
         .catch(function (error) {
           setIsLoading(false);
-          // console.log(error.response);
+          console.log("error.response",error);
         });
     }
     setIsLoading(false);
@@ -539,7 +547,7 @@ const HomeScreen = () => {
             {
               fieldName: fieldName,
               date: moment(selectDate).format("MMMM DD YYYY"),
-              time:moment(selectDate).format("hh:mm a"),
+              time: moment(selectDate).format("hh:mm a"),
               latLong: JSON.stringify(coordinatesWithLast),
             },
           ],
@@ -549,7 +557,7 @@ const HomeScreen = () => {
             {
               fieldName: fieldName,
               date: moment(selectDate).format("MMMM DD YYYY"),
-              time:moment(selectDate).format("hh:mm a"),
+              time: moment(selectDate).format("hh:mm a"),
               latLong: JSON.stringify(coordinatesWithLast),
             },
           ],
@@ -582,7 +590,6 @@ const HomeScreen = () => {
         camera.current?.setCamera({
           centerCoordinate: [-84.270172, 38.206348],
         });
-       
       });
   };
 
@@ -593,6 +600,7 @@ const HomeScreen = () => {
       </View>
     );
   }
+console.log('webView',webView);
 
   if (selectMapView) {
     return (
@@ -601,7 +609,6 @@ const HomeScreen = () => {
           <Mapbox.MapView
             styleURL="mapbox://styles/mapbox/streets-v11"
             style={styles.map}
-            
             onPress={async (e) => {
               setStarted(true);
               camera.current?.setCamera({
@@ -685,7 +692,7 @@ const HomeScreen = () => {
             fieldName={fieldName}
             setFieldName={(text) => setFieldName(text)}
             selectDate={selectDate}
-            setSelectDate={(text)=>setSelectDate(text)}
+            setSelectDate={(text) => setSelectDate(text)}
           />
         </View>
       </View>
@@ -694,24 +701,25 @@ const HomeScreen = () => {
     return (
       <View style={{ flex: 1 }}>
         <WebView
-          source={{ html: webView }}
-          style={{ flex: 1 }}
-          injectedJavaScriptForMainFrameOnly={true}
-          originWhitelist={["*"]}
-          javaScriptEnabled={true}
-          startInLoadingState
-          mixedContentMode="always"
-          allowFileAccess={true}
-          domStorageEnabled={true}
-          allowUniversalAccessFromFileURLs={true}
-          allowFileAccessFromFileURLs={true}
+           source={{ html: webView }}
+           style={{ flex: 1 }}
+           injectedJavaScriptForMainFrameOnly={true}
+           originWhitelist={["*"]}
+           javaScriptEnabled={true}
+           startInLoadingState
+           mixedContentMode="always"
+           allowFileAccess={true}
+           domStorageEnabled={true}
+           allowUniversalAccessFromFileURLs={true}
+           allowFileAccessFromFileURLs={true}
         />
         {!isLoading && (
           <TouchableOpacity
             style={[
               styles.btnStyle,
               {
-                backgroundColor: user?.userEvent?.length == 0 ? "#EE82EE" : "red",
+                backgroundColor:
+                  user?.userEvent?.length == 0 ? "#EE82EE" : "red",
               },
             ]}
             onPress={() => {
@@ -776,7 +784,7 @@ const styles = StyleSheet.create({
   },
   btnStyle: {
     position: "absolute",
-    top: 10,
+    top: Platform.OS == "ios" ? 70 : 10,
 
     right: 10,
     width: 130,
