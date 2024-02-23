@@ -53,6 +53,7 @@ const BottomFieldModal = ({
       <View style={styles.container}>
         <View style={styles.bodyContent}>
           <View style={styles.topLine} />
+          <View style={{flex:1}}>
           <View style={styles.bodyStyle}>
             <Text style={styles.bodyText}>Field Name</Text>
             <TextInput
@@ -70,7 +71,12 @@ const BottomFieldModal = ({
               <Text style={styles.dateText}>
                 {moment(selectDate).format("MM/DD/YYYY")}
               </Text>
-              {isShowDatePicker && (
+             
+            </TouchableOpacity>
+          </View>
+
+          </View>
+          {isShowDatePicker && (
                 <View>
                   <RNDateTimePicker
                     mode="date"
@@ -84,13 +90,12 @@ const BottomFieldModal = ({
                   />
                 </View>
               )}
-            </TouchableOpacity>
-          </View>
           <TouchableOpacity onPress={onPress} style={styles.btnText}>
             <Text style={{ color: "#fff", fontSize: 18, fontWeight: "600" }}>
               Save
             </Text>
           </TouchableOpacity>
+       
         </View>
       </View>
     </Modal>
@@ -124,7 +129,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginHorizontal: 16,
     marginBottom: 18,
-    flex: 1,
+    marginTop:20
+    // flex: 1,
   },
   bodyText: {
     fontSize: 18,
@@ -149,7 +155,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "center",
     borderRadius: 8,
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom:30
   },
 });
 

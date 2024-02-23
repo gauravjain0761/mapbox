@@ -194,8 +194,7 @@ const NoteEditScreen = () => {
       .update(updateValue1)
       .then(async (res) => {
         navigationRef.goBack();
-        setCoordinates([]),
-         setLastCoordinate([0, 0]);
+        setCoordinates([]), setLastCoordinate([0, 0]);
         setFieldName("");
       })
       .catch((E) => {
@@ -267,7 +266,6 @@ const NoteEditScreen = () => {
           modalHeight={600}
           snapPoint={300}
           alwaysOpen={400}
-          
         >
           {params?.newaddting ? (
             <View style={{ marginTop: 18 }}>
@@ -304,6 +302,7 @@ const NoteEditScreen = () => {
                       fontWeight: "400",
                       textAlign: "right",
                       marginRight: 16,
+                      paddingVertical:Platform.OS == 'ios' ? 16 :0,
                       // height:10
                     }}
                   />
@@ -344,19 +343,6 @@ const NoteEditScreen = () => {
                     {selectDate}
                   </Text>
                 </TouchableOpacity>
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={new Date()}
-                    
-                    mode="date"
-                    display="default"
-                    onChange={(e, d) => {
-                      setSelectDate(moment(d).format("MMMM DD YYYY"));
-                      setShowDatePicker(false);
-                    }}
-                    style={{ backgroundColor: "white" }}
-                  />
-                )}
               </View>
               <View
                 style={{
@@ -377,19 +363,6 @@ const NoteEditScreen = () => {
                     {selectTime}
                   </Text>
                 </TouchableOpacity>
-                {showTimePicker && (
-                  <DateTimePicker
-                  testID="datePicker"
-                    value={new Date()}
-                    mode="time"
-                    display="spinner"
-                    onChange={(e, d) => {
-                      setSelectTime(moment(d).format("HH:MM a"));
-                      setShowTimePicker(false);
-                    }}
-                    style={{ backgroundColor: "white" }}
-                  />
-                )}
               </View>
               <View
                 style={{
@@ -435,8 +408,7 @@ const NoteEditScreen = () => {
                       fontWeight: "400",
                       textAlign: "right",
                       marginRight: 16,
-                      paddingVertical: Platform.OS == 'ios' ? 18 :0
-                      
+                      paddingVertical: Platform.OS == "ios" ? 18 : 0,
                     }}
                   />
                 </View>
@@ -476,19 +448,18 @@ const NoteEditScreen = () => {
                     {selectDate}
                   </Text>
                 </TouchableOpacity>
-                {showDatePicker && (
+                {/* {showDatePicker && (
                   <DateTimePicker
                     value={new Date()}
-                    mode={ "date"}
-                    
-                    display={Platform.OS == 'ios'  ? 'clock' :"calendar"}
+                    mode={"date"}
+                    display={Platform.OS == "ios" ? "clock" : "calendar"}
                     onChange={(e, d) => {
                       setSelectDate(moment(d).format("MMMM DD YYYY"));
                       setShowDatePicker(false);
                     }}
                     style={{ backgroundColor: "white" }}
                   />
-                )}
+                )} */}
               </View>
               <View
                 style={{
@@ -509,7 +480,7 @@ const NoteEditScreen = () => {
                     {selectTime}
                   </Text>
                 </TouchableOpacity>
-                {showTimePicker && (
+                {/* {showTimePicker && (
                   <DateTimePicker
                     value={new Date()}
                     mode="time"
@@ -520,7 +491,7 @@ const NoteEditScreen = () => {
                     }}
                     style={{ backgroundColor: "white" }}
                   />
-                )}
+                )} */}
               </View>
               <View
                 style={{
@@ -577,17 +548,48 @@ const NoteEditScreen = () => {
               />
             </View>
           )}
+          {showDatePicker && (
+            <View style={{ bottom: 80 }}>
+              <DateTimePicker
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "calendar"}
+                maximumDate={new Date()}
+                value={new Date()}
+                onChange={(e, d) => {
+                  setSelectDate(moment(d).format("MMMM DD YYYY"));
+                  setShowDatePicker(false);
+                  // setSelectDate(moment(d).format("MMMM DD YYYY"));
+                  // setShowDatePicker(false);
+                }}
+                style={{ backgroundColor: "white", marginBottom: 130 }}
+              />
+            </View>
+          )}
+          {showTimePicker && (
+            <View style={{ bottom: 80 }}>
+              <DateTimePicker
+                testID="datePicker"
+                value={new Date()}
+                mode="time"
+                display="spinner"
+                display={Platform.OS === "ios" ? "spinner" : "clock"}
+                onChange={(e, d) => {
+                  setSelectTime(moment(d).format("HH:MM a"));
+                  setShowTimePicker(false);
+                }}
+                style={{ backgroundColor: "white" }}
+              />
+            </View>
+          )}
           {!params?.newaddting && (
             <TouchableOpacity
               style={styles.btnStyleBottom}
               onPress={() => {
-                editSelectModal ? onDeletePree() :
-                 setEditSelectModal(true);
-                 setSelectDate(user?.userNotes?.[0].date);
-                 setSelectTime(user?.userNotes?.[0].time);
-                 setCoomentValue(user?.userNotes?.[0]?.cooment);
-                 setFieldName(user?.userNotes?.[0]?.fieldName);
-
+                editSelectModal ? onDeletePree() : setEditSelectModal(true);
+                setSelectDate(user?.userNotes?.[0].date);
+                setSelectTime(user?.userNotes?.[0].time);
+                setCoomentValue(user?.userNotes?.[0]?.cooment);
+                setFieldName(user?.userNotes?.[0]?.fieldName);
               }}
             >
               <Text
@@ -741,6 +743,7 @@ const styles = StyleSheet.create({
   editTextInput: {
     maxHeight: 100,
     minHeight: 50,
+    paddingVertical:Platform.OS == 'ios' ? 16 :0
   },
 });
 
