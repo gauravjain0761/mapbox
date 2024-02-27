@@ -77,22 +77,23 @@ export default function ProfileScreen() {
   ];
 
   const onUserData = async () => {
-    const firestoreDocument = await firestore()
-      .collection("Users")
-      .doc(userData?.uid)
-      .get();
-
-    const updatedUser = firestoreDocument.data();
-    setUser(updatedUser);
-
-    setIsLoading(false);
+    await firestore()
+    .collection("Users")
+    .onSnapshot((snapshot) => {
+      const tweetArray = snapshot.docs.filter((document) => {
+        return document.id == userData?.uid ? document.data() : null;
+      });
+      console.log("tweetArray", tweetArray[0]?._data);
+      setUser(tweetArray[0]?._data);
+      setIsLoading(false);
+    });
   };
 
   useEffect(() => {
     setIsLoading(true);
 
     onUserData();
-  }, [isFocused, userData]);
+  }, []);
 
   if (isLoading) {
     return (

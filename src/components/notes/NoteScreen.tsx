@@ -37,39 +37,42 @@ export default function NoteScreen() {
   );
   Mapbox.setTelemetryEnabled(false);
 
-  const onUserData = async () => {
-    const firestoreDocument = await firestore()
-      .collection("Users")
-      .doc(userData?.uid)
-      .get();
+  console.log("user", user);
 
-    const updatedUser = firestoreDocument.data();
-    setUser(updatedUser);
-    setIsLoading(false);
+  const onUserData = async () => {
+    await firestore()
+      .collection("Users")
+      .onSnapshot((snapshot) => {
+        const tweetArray = snapshot.docs.filter((document) => {
+          return document.id == userData?.uid ? document.data() : null;
+        });
+        console.log("tweetArray", tweetArray[0]?._data);
+        setUser(tweetArray[0]?._data);
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
     setIsLoading(true);
     onUserData();
-  }, [isFocused]);
+  }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     setFilteredUsers(user?.userNotes);
-  },[user])
+  }, [user]);
 
   const filterSearch = (text) => {
-    setSearchItem(text)
-    const filteredItems = user?.userNotes?.filter((user) =>
-      user?.fieldName?.toLowerCase().includes(text?.toLowerCase()) ||
-      user?.cooment?.toLowerCase().includes(text?.toLowerCase()) 
+    setSearchItem(text);
+    const filteredItems = user?.userNotes?.filter(
+      (user) =>
+        user?.fieldName?.toLowerCase().includes(text?.toLowerCase()) ||
+        user?.cooment?.toLowerCase().includes(text?.toLowerCase())
     );
 
     setFilteredUsers(filteredItems);
   };
 
-
-  console.log('filteredUsers',filteredUsers);
-  
+  console.log("filteredUsers", filteredUsers);
 
   if (isLoading) {
     return (
@@ -83,114 +86,146 @@ export default function NoteScreen() {
 
   return (
     <>
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
-      <View style={{ backgroundColor: "#fff" }}>
-        <View
-          style={{
-            backgroundColor: "white",
-            padding: 15,
-          }}
-        >
-          <Text style={{ color: "black", fontSize: 18, textAlign: "center" }}>
-            Notes
-          </Text>
-        </View>
-        {user?.userNotes?.length !== 0 && (
-          <>
-            <View style={styles.searchView}>
-              <AntDesign name="search1" color="gray" size={20} />
-              <TextInput
-                placeholder="Search notes"
-                style={styles.textInput}
-                value={searchItem}
-                onChangeText={(text)=>{
-                  filterSearch(text)
-                }}
-              />
-            </View>
-            {filteredUsers?.length > 0 && (
-              <FlatList
-                data={filteredUsers}
-                renderItem={({ item }) => {
-                  console.log("item", item);
-
-                  return (
-                    <TouchableOpacity
-                      onPress={() =>
-                        navigationRef.navigate("NoteEditScreen", {
-                          newaddting: false,
-                        })
-                      }
-                      style={styles.listView}
-                    >
-                      <View style={styles.topView}>
-                        <View style={styles.leftView}>
-                          <Text style={styles.topTextStyle}>
-                            {`${item.date} ${item.time}`}
-                          </Text>
-                          <Text style={styles.topSubTextStyle}>
-                            {item?.fieldName}
-                          </Text>
-                        </View>
-                        <Ionicons
-                          name="share-outline"
-                          color="#2c93f6"
-                          size={22}
-                        />
-                      </View>
-                      <View style={styles.bodyView}>
-                        <MapView
-                          provider={"google"}
-                          style={styles.map}
-                        ></MapView>
-                      </View>
-                      <Text style={styles.bottomText}>{item?.cooment}</Text>
-                    </TouchableOpacity>
-                  );
-                }}
-              />
-            )}
-          </>
-        )}
-      </View>
-
-      {user?.userNotes?.length == 0 && (
-        <View
-          style={{ flex: 1, justifyContent: "center", paddingHorizontal: 15 }}
-        >
-          <Text
-            style={{ fontWeight: "bold", fontSize: 16, textAlign: "center" }}
-          >
-            You don't have any notes yet
-          </Text>
-          <Text style={{ textAlign: "center", marginTop: 7 }}>
-            Add notes when you conduct field scouting or When you want to mark
-            an important place on the map
-          </Text>
-
-          <TouchableOpacity
-            onPress={() => {
-              user?.userEvent?.length === 0
-                ? alert("Please first add field and then add notes")
-                : navigationRef.navigate("NoteEditScreen", {
-                    newaddting: true,
-                  });
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
+        <View style={{ backgroundColor: "#fff", flex: 1 }}>
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 15,
+              flexDirection: "row",
+              alignSelf: "center",
             }}
           >
             <Text
               style={{
-                color: "#2c93f6",
-                fontWeight: "bold",
-                marginTop: 7,
+                color: "black",
+                fontSize: 18,
                 textAlign: "center",
+                flex: 1,
+                marginLeft: 30,
               }}
             >
-              Add your first note
+              Notes
             </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                width: 30,
+                height: 30,
+                backgroundColor: "#EE82EE",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 30,
+                bottom: 2,
+              }}
+              onPress={() => {
+                user?.userEvent?.length === 0
+                  ? alert("Please first add field and then add notes")
+                  : navigationRef.navigate("NoteEditScreen", {
+                      newaddting: true,
+                    });
+              }}
+            >
+              <AntDesign name="plus" color="black" size={18} />
+            </TouchableOpacity>
+          </View>
+          {user?.userNotes?.length !== 0 && (
+            <>
+              <View style={styles.searchView}>
+                <AntDesign name="search1" color="gray" size={20} />
+                <TextInput
+                  placeholder="Search notes"
+                  style={styles.textInput}
+                  value={searchItem}
+                  onChangeText={(text) => {
+                    filterSearch(text);
+                  }}
+                />
+              </View>
+              {filteredUsers?.length > 0 && (
+                <FlatList
+                  data={filteredUsers}
+                  style={{ flex: 1 }}
+                  renderItem={({ item }) => {
+                    console.log("item", item);
+                    return (
+                      <TouchableOpacity
+                        onPress={() =>
+                          //@ts-ignore
+                          navigationRef.navigate("NoteEditScreen", {
+                            newaddting: false,
+                            userId: item?.id,
+                          })
+                        }
+                        style={styles.listView}
+                      >
+                        <View style={styles.topView}>
+                          <View style={styles.leftView}>
+                            <Text style={styles.topTextStyle}>
+                              {`${item.date} ${item.time}`}
+                            </Text>
+                            <Text style={styles.topSubTextStyle}>
+                              {item?.fieldName}
+                            </Text>
+                          </View>
+                          <Ionicons
+                            name="share-outline"
+                            color="#2c93f6"
+                            size={22}
+                          />
+                        </View>
+                        <View style={styles.bodyView}>
+                          <MapView
+                            provider={"google"}
+                            style={styles.map}
+                          ></MapView>
+                        </View>
+                        <Text style={styles.bottomText}>{item?.cooment}</Text>
+                      </TouchableOpacity>
+                    );
+                  }}
+                />
+              )}
+            </>
+          )}
         </View>
-      )}
-    </SafeAreaView>
+
+        {user?.userNotes?.length == 0 && (
+          <View
+            style={{ flex: 1, justifyContent: "center", paddingHorizontal: 15 }}
+          >
+            <Text
+              style={{ fontWeight: "bold", fontSize: 16, textAlign: "center" }}
+            >
+              You don't have any notes yet
+            </Text>
+            <Text style={{ textAlign: "center", marginTop: 7 }}>
+              Add notes when you conduct field scouting or When you want to mark
+              an important place on the map
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => {
+                user?.userEvent?.length === 0
+                  ? alert("Please first add field and then add notes")
+                  : navigationRef.navigate("NoteEditScreen", {
+                      newaddting: true,
+                    });
+              }}
+            >
+              <Text
+                style={{
+                  color: "#2c93f6",
+                  fontWeight: "bold",
+                  marginTop: 7,
+                  textAlign: "center",
+                }}
+              >
+                Add your first note
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </SafeAreaView>
     </>
   );
 }

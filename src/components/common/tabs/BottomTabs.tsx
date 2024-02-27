@@ -9,6 +9,7 @@ import NoteScreen from '../../notes/NoteScreen';
 import ProfileScreen from '../../profile/ProfileScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import NoteEditScreen from '../../notes/NoteEditScreen';
+import InsightMapScreen from '../../insight/InsightMapScreen';
 
 
 export function NotesRoutes() {
@@ -20,6 +21,20 @@ export function NotesRoutes() {
         screenOptions={{headerShown: false}}>
         <Stack.Screen name="NoteScreen" component={NoteScreen} />
         <Stack.Screen name="NoteEditScreen" component={NoteEditScreen} />
+      </Stack.Navigator>
+    </>
+  );
+}
+
+export function InsightsRoutes() {
+  const Stack = createNativeStackNavigator();
+  return (
+    <>
+      <Stack.Navigator
+        initialRouteName="InsightScreen"
+        screenOptions={{headerShown: false}}>
+        <Stack.Screen name="InsightScreen" component={InsightScreen} />
+        <Stack.Screen name="InsightMapScreen" component={InsightMapScreen} />
       </Stack.Navigator>
     </>
   );
@@ -71,7 +86,7 @@ export default function TabScreen() {
           ),
         }}
         name="TabClasses"
-        component={InsightScreen}
+        component={InsightsRoutes}
       />
       <Tab.Screen
         options={{

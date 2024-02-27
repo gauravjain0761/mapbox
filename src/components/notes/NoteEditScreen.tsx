@@ -25,6 +25,8 @@ import {
   useRoute,
 } from "@react-navigation/native";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
+import uuid from "react-native-uuid";
+import CommonDropdown from "../common/inputs/CommonDropdown";
 
 Mapbox.setAccessToken(
   "sk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xzbGtiZTFzMGdmYTJpbjIzN3k0bnlxaCJ9.QA8nG8R26zj9buRyiMlUTg"
@@ -45,6 +47,7 @@ const NoteEditScreen = () => {
   const [lastCoordinate, setLastCoordinate] = useState<Position>([0, 0]);
   const [crosshairPos, setCrosshairPos] = useState([0, 0]);
   const [user, setUser] = useState([]);
+  const [userNotesList, setUserNotesList] = useState([]);
   const [initializing, setInitializing] = useState(true);
   const [fieldName, setFieldName] = useState("");
   const [selectDate, setSelectDate] = useState(
@@ -90,17 +93,14 @@ const NoteEditScreen = () => {
       .get();
 
     const updatedUser = firestoreDocument.data();
+    const userNotes = updatedUser?.userNotes?.filter(
+      (list) => list.id === params?.userId
+    );
     setUser(updatedUser);
+    setUserNotesList(userNotes);
     const userUpdate = [];
-    console.log("updatedUser", updatedUser?.userNotes[0]);
-    console.log("updatedUser", updatedUser?.userEvent[0]?.fieldName);
-    // if (updatedUser?.userNotes?.length !== 0) {
-    //   setSelectDate(updatedUser?.userNotes[0].date);
-    //   setSelectTime(updatedUser?.userNotes[0].time);
-    //   setCoomentValue(updatedUser?.userNotes[0]?.cooment);
-    //   setFieldName(updatedUser?.userNotes[0]?.fieldName);
-    // }
-    setFieldName(updatedUser?.userEvent[0]?.fieldName);
+
+    // setFieldName(updatedUser?.userEvent[0]?.fieldName);
 
     updatedUser?.userEvent?.map((item) => {
       userUpdate.push(JSON.parse(item.latLong));
@@ -175,15 +175,23 @@ const NoteEditScreen = () => {
       });
   };
 
-  const onNewNotesPress = () => {
+  const onNewNotesPress = async () => {
+    const firestoreDocument = await firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .get();
+
+    const updatedUser = firestoreDocument.data();
     const updateValue1 = {
       userNotes: [
+        ...updatedUser?.userNotes,
         {
           fieldName: fieldName,
           latLong: [],
           time: selectTime,
           date: selectDate,
           cooment: coomentValue,
+          id: uuid.v4(),
         },
       ],
     };
@@ -202,17 +210,34 @@ const NoteEditScreen = () => {
       });
   };
 
-  const onEditNotesPress = () => {
-    const updateValue1 = {
-      userNotes: [
-        {
+  const onEditNotesPress = async () => {
+    const firestoreDocument = await firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .get();
+
+    const updatedUser = firestoreDocument.data();
+    console.log('updatedUserupdatedUser',updatedUser);
+    
+    const userNotes = updatedUser?.userNotes?.map((list: any) => {
+      if (list.id === params?.userId) {
+        return {
+          ...list,
           fieldName: fieldName,
           latLong: [],
           time: selectTime,
           date: selectDate,
           cooment: coomentValue,
-        },
-      ],
+        };
+      } else {
+        return {...list};
+      }
+    });
+
+    console.log('userNotes',userNotes);
+    
+    const updateValue1 = {
+      userNotes: userNotes,
     };
 
     firestore()
@@ -228,11 +253,34 @@ const NoteEditScreen = () => {
       });
   };
 
-  const onDeletePree = () => {
+  console.log('user?.userEvent',user?.userEvent);
+  
+
+  const onDeletePressAction = () => {
+    Alert.alert('', 'Are you sure you want to delete?', [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {text: 'OK', onPress: () => onDeletePress()},
+    ]);
+  };
+
+  const onDeletePress = async () => {
+    const firestoreDocument = await firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .get();
+
+    const updatedUser = firestoreDocument.data();
+    const userNotes = updatedUser?.userNotes?.filter(
+      (list:any) => list.id !== params?.userId
+    );
     firestore()
       .collection("Users")
       .doc(userData?.uid)
-      .update({ userNotes: [] })
+      .update({ userNotes: userNotes })
       .then(async (res) => {
         navigationRef.goBack();
       });
@@ -290,7 +338,7 @@ const NoteEditScreen = () => {
               <View style={{ marginTop: 0, marginLeft: 16 }}>
                 <View style={styles.editFiledView}>
                   <Text style={styles.fieldText}>{"Field"}</Text>
-                  <TextInput
+                  {/* <TextInput
                     placeholder="Enter your field"
                     value={fieldName}
                     onChangeText={(text) => {
@@ -302,10 +350,19 @@ const NoteEditScreen = () => {
                       fontWeight: "400",
                       textAlign: "right",
                       marginRight: 16,
-                      paddingVertical:Platform.OS == 'ios' ? 16 :0,
+                      paddingVertical: Platform.OS == "ios" ? 16 : 0,
                       // height:10
                     }}
-                  />
+                  /> */}
+                   {user?.userEvent !== undefined && <CommonDropdown
+                    data={user?.userEvent}
+                    value={fieldName}
+                    labelField={'fieldName'}
+                    valueField={'fieldName'}
+                    onChangeText={(text: any) => {
+                      setFieldName(text);
+                    }}
+                  />}
                 </View>
                 <View
                   style={{
@@ -396,21 +453,15 @@ const NoteEditScreen = () => {
                 <View style={styles.editFiledView}>
                   <Text style={styles.fieldText}>{"Field"}</Text>
 
-                  <TextInput
-                    placeholder="Enter your field"
+                 {user?.userEvent !== undefined&& <CommonDropdown
+                    data={user?.userEvent}
                     value={fieldName}
-                    onChangeText={(text) => {
+                    labelField={'fieldName'}
+                    valueField={'fieldName'}
+                    onChangeText={(text: any) => {
                       setFieldName(text);
                     }}
-                    style={{
-                      fontSize: 16,
-                      color: "#2c93f6",
-                      fontWeight: "400",
-                      textAlign: "right",
-                      marginRight: 16,
-                      paddingVertical: Platform.OS == "ios" ? 18 : 0,
-                    }}
-                  />
+                  />}
                 </View>
                 <View
                   style={{
@@ -506,10 +557,10 @@ const NoteEditScreen = () => {
               <View style={styles.topView}>
                 <View style={styles.leftView}>
                   <Text style={styles.topTextStyle}>
-                    {`${user?.userNotes?.[0]?.date} ${user?.userNotes?.[0]?.time}`}
+                    {`${userNotesList?.[0]?.date} ${userNotesList?.[0]?.time}`}
                   </Text>
                   <Text style={styles.topSubTextStyle}>
-                    {user?.userNotes?.[0]?.cooment}
+                    {userNotesList?.[0]?.cooment}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -536,7 +587,7 @@ const NoteEditScreen = () => {
                 <Text style={styles.headerText}>Field information</Text>
                 <FieldView
                   label="Name"
-                  value={user?.userNotes?.[0]?.fieldName}
+                  value={userNotesList?.[0]?.fieldName}
                 />
               </View>
               <View
@@ -585,11 +636,11 @@ const NoteEditScreen = () => {
             <TouchableOpacity
               style={styles.btnStyleBottom}
               onPress={() => {
-                editSelectModal ? onDeletePree() : setEditSelectModal(true);
-                setSelectDate(user?.userNotes?.[0].date);
-                setSelectTime(user?.userNotes?.[0].time);
-                setCoomentValue(user?.userNotes?.[0]?.cooment);
-                setFieldName(user?.userNotes?.[0]?.fieldName);
+                editSelectModal ? onDeletePressAction() : setEditSelectModal(true);
+                setSelectDate(userNotesList?.[0].date);
+                setSelectTime(userNotesList?.[0].time);
+                setCoomentValue(userNotesList?.[0]?.cooment);
+                setFieldName(userNotesList?.[0]?.fieldName);
               }}
             >
               <Text
@@ -692,6 +743,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#000",
     fontWeight: "400",
+    flex:1
   },
   fieldSubText: {
     fontSize: 16,
@@ -743,7 +795,7 @@ const styles = StyleSheet.create({
   editTextInput: {
     maxHeight: 100,
     minHeight: 50,
-    paddingVertical:Platform.OS == 'ios' ? 16 :0
+    paddingVertical: Platform.OS == "ios" ? 16 : 0,
   },
 });
 

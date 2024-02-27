@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   SafeAreaView,
   StyleSheet,
@@ -15,7 +16,8 @@ import auth, { firebase } from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import moment from "moment";
 import MapView from "react-native-maps";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
+import AntDesign from "react-native-vector-icons/AntDesign";
 
 export default function InsightScreen() {
   const userData = firebase.auth().currentUser;
@@ -24,6 +26,7 @@ export default function InsightScreen() {
   const [initializing, setInitializing] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const isFocused = useIsFocused();
+  const navigationRef = useNavigation();
 
   // setTimeout(() => {
   //   // setCurrentTime(Date.now() + 1);
@@ -34,43 +37,41 @@ export default function InsightScreen() {
   }
 
   const onUserData = async () => {
+    await firestore()
+    .collection("Users")
+    .onSnapshot((snapshot) => {
+      const tweetArray = snapshot.docs.filter((document) => {
+        return document.id == userData?.uid ? document.data() : null;
+      });
+      console.log("tweetArray", tweetArray[0]?._data);
+      setUser(tweetArray[0]?._data);
+      setIsLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
+    onUserData();
+  }, []);
+
+  const onDeletePress = async (id: any) => {
     const firestoreDocument = await firestore()
       .collection("Users")
       .doc(userData?.uid)
       .get();
 
     const updatedUser = firestoreDocument.data();
-    setUser(updatedUser);
-    // const userUpdate = [];
-    // updatedUser?.userEvent?.map((item) => {
-    //   userUpdate.push(JSON.parse(item.latLong));
-    // });
-    // var data = JSON.stringify({
-    //   lats_longs: userUpdate,
-    // });
-    // var config = {
-    //   method: "post",
-    //   url: "http://143.198.226.104:80/get_final_geometry/",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   data: data,
-    // };
-
-    // axios(config)
-    //   .then(function (response) {
-    //     // setWebView(response?.data);
-    //   })
-    //   .catch(function (error) {
-    //     // console.log(error.response);
-    //   });
-    setIsLoading(false);
+    const userEventList = updatedUser?.userEvent?.filter(
+      (list: any) => list.id !== id
+    );
+    firestore()
+      .collection("Users")
+      .doc(userData?.uid)
+      .update({ userEvent: userEventList })
+      .then(async (res) => {
+        onUserData();
+      });
   };
-
-  useEffect(() => {
-    setIsLoading(true);
-    onUserData();
-  }, [isFocused]);
 
   if (isLoading) {
     return (
@@ -80,15 +81,19 @@ export default function InsightScreen() {
     );
   }
 
+  console.log("user?.userEvent", user?.userEvent);
 
-  console.log('user?.userEvent',user?.userEvent);
-  
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
       <View style={{ backgroundColor: "#fff" }}>
-        <Text style={{ color: "black", padding: 18, textAlign: "center" }}>
-          {/* It is {VUtils.showTime(currentTime, "h:mm:ss a")} on{" "}
-          {VUtils.showTime(currentTime, "MMMM D")} */}
+        <Text
+          style={{
+            color: "black",
+            padding: 18,
+            textAlign: "center",
+            fontSize: 18,
+          }}
+        >
           Insight
         </Text>
       </View>
@@ -102,35 +107,53 @@ export default function InsightScreen() {
               marginHorizontal: 16,
               marginTop: 10,
             }}
-          >
-            {/* <TouchableOpacity
-              style={[styles.btnStyle, { backgroundColor: "#2b2b08" }]}
-            >
-              <Text style={[styles.btnTextStyle, { color: "#fff" }]}>
-                All fields
-              </Text>
-            </TouchableOpacity> */}
-            {/* <TouchableOpacity
-              style={[styles.btnStyle, { backgroundColor: "#cccccc" }]}
-            >
-              <Text style={styles.btnTextStyle}>Cotton</Text>
-            </TouchableOpacity> */}
-          </View>
+          ></View>
           {user?.userEvent?.map((item: any) => {
             return (
-              <View style={styles.listView}>
+              <TouchableOpacity
+                onPress={() => {
+                  navigationRef.navigate("InsightMapScreen", {
+                    eventId: item?.id,
+                    titleName: item?.fieldName,
+                  });
+                }}
+                style={styles.listView}
+              >
                 <View style={styles.leftView}>
                   <MapView provider={"google"} style={styles.map}></MapView>
                 </View>
                 <View style={styles.bodyView}>
-                  <Text numberOfLines={1} style={styles.bodyText}>{item?.fieldName}</Text>
+                  <Text numberOfLines={1} style={styles.bodyText}>
+                    {item?.fieldName}
+                  </Text>
                   {/* <Text style={styles.bodySubText}>Cotton</Text> */}
                 </View>
                 <View style={styles.rightView}>
-                  <Text style={styles.rightText}>{item?.date}</Text>
-                  <Text style={styles.rightSubText}> {item?.time}</Text>
+                  <View>
+                    <Text style={styles.rightText}>{item?.date}</Text>
+                    <Text style={styles.rightSubText}> {item?.time}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Alert.alert("", "Are you sure you want to Delete", [
+                        {
+                          text: "Cancel",
+                          onPress: () => console.log("Cancel Pressed"),
+                          style: "cancel",
+                        },
+                        { text: "Ok", onPress: () => onDeletePress(item.id) },
+                      ]);
+                    }}
+                  >
+                    <MaterialIcons
+                      name="delete"
+                      color="red"
+                      size={24}
+                      style={{ marginLeft: 10 }}
+                    />
+                  </TouchableOpacity>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </>
@@ -156,6 +179,7 @@ export default function InsightScreen() {
               paddingVertical: 10,
               borderRadius: 10,
             }}
+            onPress={() => navigationRef.navigate("Stack")}
           >
             <View
               style={{
@@ -212,7 +236,9 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     top: -4,
   },
-  rightView: {},
+  rightView: {
+    flexDirection: "row",
+  },
   rightText: {
     fontSize: 12,
     color: "#000",

@@ -315,6 +315,7 @@ import WebView from "react-native-webview";
 import { useIsFocused } from "@react-navigation/native";
 import moment from "moment";
 import { SafeAreaView } from "react-native-safe-area-context";
+import uuid from "react-native-uuid";
 
 Mapbox.setAccessToken(
   "sk.eyJ1IjoiYmhhdmktazkiLCJhIjoiY2xzbGtiZTFzMGdmYTJpbjIzN3k0bnlxaCJ9.QA8nG8R26zj9buRyiMlUTg"
@@ -476,7 +477,7 @@ const HomeScreen = () => {
         url: "http://143.198.226.104:80/get_final_geometry/",
         headers: {
           "Content-Type": "application/json",
-          Accept: 'Application/json',
+          Accept: "Application/json",
           Authorization: "jwt",
         },
         data: {},
@@ -484,12 +485,12 @@ const HomeScreen = () => {
 
       axios(config)
         .then(function (response) {
-          console.log('response?.data',response?.data);
-          
+          console.log("response?.data", response?.data);
+
           setWebView(response?.data);
         })
         .catch(function (error) {
-          console.log("error.response",error.response);
+          console.log("error.response", error.response);
         });
     } else {
       var data = JSON.stringify({
@@ -500,7 +501,7 @@ const HomeScreen = () => {
         url: "http://143.198.226.104:80/get_final_geometry/",
         headers: {
           "Content-Type": "application/json",
-          Accept: 'Application/json',
+          Accept: "Application/json",
           Authorization: "jwt",
         },
         data: data,
@@ -513,7 +514,7 @@ const HomeScreen = () => {
         })
         .catch(function (error) {
           setIsLoading(false);
-          console.log("error.response",error);
+          console.log("error.response", error);
         });
     }
     setIsLoading(false);
@@ -523,7 +524,11 @@ const HomeScreen = () => {
     setIsLoading(true);
 
     onUserData();
-  }, [isModalOpen, isFocused, userData]);
+  }, [isModalOpen, userData]);
+
+  useEffect(()=>{
+    onUserData();
+  },[])
 
   const coordinatesWithLast = useMemo(() => {
     return [...coordinates, lastCoordinate];
@@ -549,6 +554,7 @@ const HomeScreen = () => {
               date: moment(selectDate).format("MMMM DD YYYY"),
               time: moment(selectDate).format("hh:mm a"),
               latLong: JSON.stringify(coordinatesWithLast),
+              id: uuid.v4(),
             },
           ],
         }
@@ -559,6 +565,7 @@ const HomeScreen = () => {
               date: moment(selectDate).format("MMMM DD YYYY"),
               time: moment(selectDate).format("hh:mm a"),
               latLong: JSON.stringify(coordinatesWithLast),
+              id: uuid.v4(),
             },
           ],
         };
@@ -579,19 +586,6 @@ const HomeScreen = () => {
       });
   };
 
-  const onDeletePree = () => {
-    firestore()
-      .collection("Users")
-      .doc(userData?.uid)
-      .update({ userEvent: [] })
-      .then(async (res) => {
-        onUserData();
-        setSelectMapView(true);
-        camera.current?.setCamera({
-          centerCoordinate: [-84.270172, 38.206348],
-        });
-      });
-  };
 
   if (isLoading) {
     return (
@@ -600,7 +594,7 @@ const HomeScreen = () => {
       </View>
     );
   }
-console.log('webView',webView);
+  console.log("webView", webView);
 
   if (selectMapView) {
     return (
@@ -701,47 +695,36 @@ console.log('webView',webView);
     return (
       <View style={{ flex: 1 }}>
         <WebView
-           source={{ html: webView }}
-           style={{ flex: 1 }}
-           injectedJavaScriptForMainFrameOnly={true}
-           originWhitelist={["*"]}
-           javaScriptEnabled={true}
-           startInLoadingState
-           mixedContentMode="always"
-           allowFileAccess={true}
-           domStorageEnabled={true}
-           allowUniversalAccessFromFileURLs={true}
-           allowFileAccessFromFileURLs={true}
+          source={{ html: webView }}
+          style={{ flex: 1 }}
+          injectedJavaScriptForMainFrameOnly={true}
+          originWhitelist={["*"]}
+          javaScriptEnabled={true}
+          startInLoadingState
+          mixedContentMode="always"
+          allowFileAccess={true}
+          domStorageEnabled={true}
+          allowUniversalAccessFromFileURLs={true}
+          allowFileAccessFromFileURLs={true}
         />
         {!isLoading && (
           <TouchableOpacity
             style={[
               styles.btnStyle,
               {
-                backgroundColor:
-                  user?.userEvent?.length == 0 ? "#EE82EE" : "red",
+                backgroundColor: "#EE82EE",
+                width: user?.userEvent?.length == 0 ? 130 : 160,
               },
             ]}
             onPress={() => {
-              if (user?.userEvent?.length == 0) {
-                setSelectMapView(true);
-                camera.current?.setCamera({
-                  centerCoordinate: [-84.270172, 38.206348],
-                });
-              } else {
-                Alert.alert("", "Are you sure you want to Delete", [
-                  {
-                    text: "Cancel",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel",
-                  },
-                  { text: "Ok", onPress: () => onDeletePree() },
-                ]);
-              }
+              setSelectMapView(true);
+              camera.current?.setCamera({
+                centerCoordinate: [-84.270172, 38.206348],
+              });
             }}
           >
             <Text style={styles.btnTextStyle}>
-              {user?.userEvent?.length == 0 ? "Add Field" : "Delete Field"}{" "}
+              {user?.userEvent?.length == 0 ? "Add Field" : "Add More Field"}
             </Text>
           </TouchableOpacity>
         )}
@@ -785,7 +768,6 @@ const styles = StyleSheet.create({
   btnStyle: {
     position: "absolute",
     top: Platform.OS == "ios" ? 70 : 10,
-
     right: 10,
     width: 130,
     height: 40,
