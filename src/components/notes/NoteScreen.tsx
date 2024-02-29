@@ -87,7 +87,7 @@ export default function NoteScreen() {
   return (
     <>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
-        <View style={{ backgroundColor: "#fff", flex: 1 }}>
+        <View style={{ backgroundColor: "#fff", flex: user?.userNotes?.length == 0 ? 0 : 1 }}>
           <View
             style={{
               backgroundColor: "white",
