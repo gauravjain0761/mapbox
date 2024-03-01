@@ -107,7 +107,7 @@ export default function ProfileScreen() {
   
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top']}>
       <View
         style={{
           marginBottom: 40,

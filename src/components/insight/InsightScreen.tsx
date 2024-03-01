@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,6 +17,7 @@ import moment from "moment";
 import MapView from "react-native-maps";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import AntDesign from "react-native-vector-icons/AntDesign";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function InsightScreen() {
   const userData = firebase.auth().currentUser;
@@ -84,7 +84,7 @@ export default function InsightScreen() {
   console.log("user?.userEvent", user?.userEvent);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top']}>
       <View style={{ backgroundColor: "#fff" }}>
         <Text
           style={{
@@ -120,7 +120,7 @@ export default function InsightScreen() {
                 style={styles.listView}
               >
                 <View style={styles.leftView}>
-                  <MapView provider={"google"} style={styles.map}></MapView>
+                  <MapView provider={MapView.PROVIDER_GOOGLE}  style={styles.map}></MapView>
                 </View>
                 <View style={styles.bodyView}>
                   <Text numberOfLines={1} style={styles.bodyText}>
@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
     // borderWidth: 1,
     width: 100,
     height: 65,
+    borderWidth:1
   },
   bodyView: {
     // flexDirection: "row",

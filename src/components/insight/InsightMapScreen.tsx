@@ -277,7 +277,7 @@ const InsightMapScreen = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top']}>
       <View
         style={{
           backgroundColor: "#fff",
@@ -337,7 +337,7 @@ const InsightMapScreen = () => {
         allowUniversalAccessFromFileURLs={true}
         allowFileAccessFromFileURLs={true}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

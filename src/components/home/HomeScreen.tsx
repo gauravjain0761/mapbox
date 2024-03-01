@@ -598,8 +598,8 @@ const HomeScreen = () => {
 
   if (selectMapView) {
     return (
-      <View style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        {/* <View style={{ flex: 1 }}> */}
           <Mapbox.MapView
             styleURL="mapbox://styles/mapbox/streets-v11"
             style={styles.map}
@@ -688,12 +688,12 @@ const HomeScreen = () => {
             selectDate={selectDate}
             setSelectDate={(text) => setSelectDate(text)}
           />
-        </View>
-      </View>
+        {/* </View> */}
+      </SafeAreaView>
     );
   } else {
     return (
-      <View style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 ,backgroundColor:"#fff"}} edges={['top']}>
         <WebView
           source={{ html: webView }}
           style={{ flex: 1 }}
@@ -728,7 +728,7 @@ const HomeScreen = () => {
             </Text>
           </TouchableOpacity>
         )}
-      </View>
+      </SafeAreaView>
     );
   }
 };

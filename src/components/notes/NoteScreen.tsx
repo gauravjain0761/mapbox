@@ -7,6 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
   StatusBar,
+  Dimensions,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -73,6 +74,9 @@ export default function NoteScreen() {
   };
 
   console.log("filteredUsers", filteredUsers);
+ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
+  Dimensions.get('window');
+
 
   if (isLoading) {
     return (
@@ -86,8 +90,16 @@ export default function NoteScreen() {
 
   return (
     <>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f6f9" }}>
-        <View style={{ backgroundColor: "#fff", flex: user?.userNotes?.length == 0 ? 0 : 1 }}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "#fff" }}
+        edges={["top"]}
+      >
+        <View
+          style={{
+            backgroundColor: "#fff",
+            flex: user?.userNotes?.length == 0 ? 0 : 1,
+          }}
+        >
           <View
             style={{
               backgroundColor: "white",
@@ -122,10 +134,11 @@ export default function NoteScreen() {
                   ? alert("Please first add field and then add notes")
                   : navigationRef.navigate("NoteEditScreen", {
                       newaddting: true,
+                      screenName: "New Notes",
                     });
               }}
             >
-              <AntDesign name="plus" color="black" size={18} />
+              <AntDesign name="plus" color="#fff" size={18} />
             </TouchableOpacity>
           </View>
           {user?.userNotes?.length !== 0 && (
@@ -140,51 +153,71 @@ export default function NoteScreen() {
                     filterSearch(text);
                   }}
                 />
+                {searchItem.trim().length !== 0 && (
+                  <TouchableOpacity style={{ marginRight: 10 }} onPress={()=>{filterSearch("")}}>
+                    <AntDesign name="close" color="gray" size={20} />
+                  </TouchableOpacity>
+                )}
               </View>
-              {filteredUsers?.length > 0 && (
-                <FlatList
-                  data={filteredUsers}
-                  style={{ flex: 1 }}
-                  renderItem={({ item }) => {
-                    console.log("item", item);
-                    return (
-                      <TouchableOpacity
-                        onPress={() =>
-                          //@ts-ignore
-                          navigationRef.navigate("NoteEditScreen", {
-                            newaddting: false,
-                            userId: item?.id,
-                          })
-                        }
-                        style={styles.listView}
-                      >
-                        <View style={styles.topView}>
-                          <View style={styles.leftView}>
-                            <Text style={styles.topTextStyle}>
-                              {`${item.date} ${item.time}`}
-                            </Text>
-                            <Text style={styles.topSubTextStyle}>
-                              {item?.fieldName}
-                            </Text>
-                          </View>
-                          <Ionicons
+
+              <FlatList
+                data={filteredUsers}
+                style={{ flex: 1 }}
+                renderItem={({ item }) => {
+                  console.log("item", item);
+                  return (
+                    <TouchableOpacity
+                      onPress={() =>
+                        //@ts-ignore
+                        navigationRef.navigate("NoteEditScreen", {
+                          newaddting: false,
+                          userId: item?.id,
+                          screenName: "Edit Notes",
+                        })
+                      }
+                      style={styles.listView}
+                    >
+                      <View style={styles.topView}>
+                        <View style={styles.leftView}>
+                          <Text style={styles.topTextStyle}>
+                            {`${item.date} ${item.time}`}
+                          </Text>
+                          <Text style={styles.topSubTextStyle}>
+                            {item?.fieldName}
+                          </Text>
+                        </View>
+                        {/* <Ionicons
                             name="share-outline"
                             color="#2c93f6"
                             size={22}
-                          />
-                        </View>
-                        <View style={styles.bodyView}>
-                          <MapView
-                            provider={"google"}
-                            style={styles.map}
-                          ></MapView>
-                        </View>
-                        <Text style={styles.bottomText}>{item?.cooment}</Text>
-                      </TouchableOpacity>
-                    );
-                  }}
-                />
-              )}
+                          /> */}
+                      </View>
+                      <View style={styles.bodyView}>
+                        <MapView
+                          provider={MapView.PROVIDER_GOOGLE}
+                          style={styles.map}
+                        ></MapView>
+                      </View>
+                      <Text style={styles.bottomText}>{item?.cooment}</Text>
+                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={() => {
+                  return (
+                    <View style={{ marginTop: SCREEN_HEIGHT * 0.32, }}>
+                      <Text
+                        style={{
+                          color: "#000",
+                          fontSize: 22,
+                          textAlign: "center",
+                        }}
+                      >
+                        No data found
+                      </Text>
+                    </View>
+                  );
+                }}
+              />
             </>
           )}
         </View>
@@ -243,8 +276,9 @@ const styles = StyleSheet.create({
   textInput: {
     fontSize: 18,
     color: "#000",
-    top: 2,
+    // top: 2,
     flex: 1,
+    paddingLeft:10,
   },
   listView: {
     // borderWidth: 1,

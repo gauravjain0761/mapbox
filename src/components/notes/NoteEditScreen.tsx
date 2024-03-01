@@ -296,7 +296,30 @@ const NoteEditScreen = () => {
   };
 
   return (
-    <>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top']}>
+      <View
+        style={{
+          backgroundColor: "white",
+          padding: 15,
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <TouchableOpacity onPress={() => navigationRef.goBack()}>
+          <AntDesign name="arrowleft" color="gray" size={26} />
+        </TouchableOpacity>
+        <Text
+          style={{
+            color: "black",
+            fontSize: 20,
+            textAlign: "center",
+            flex: 1,
+            right: 12,
+          }}
+        >
+          {params?.screenName}
+        </Text>
+      </View>
       <WebView
         source={{ html: webView }}
         style={{ flex: 1 }}
@@ -307,7 +330,6 @@ const NoteEditScreen = () => {
         startInLoadingState
         mixedContentMode="always"
       />
-      <SafeAreaView style={{}}>
         <Modalize
           ref={modalizeRef}
           // alwaysOpen={300}
@@ -654,8 +676,8 @@ const NoteEditScreen = () => {
             </TouchableOpacity>
           )}
         </Modalize>
-      </SafeAreaView>
-    </>
+   
+    </SafeAreaView>
   );
 };
 
