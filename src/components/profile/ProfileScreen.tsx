@@ -57,7 +57,7 @@ export default function ProfileScreen() {
       icon: <Ionicons name="paper-plane-outline" size={26} color="gray" />,
       mt: true,
       onPress: () =>
-        navigate("WebScreen", { screenName: "Telegram Community",link:'https://t.me/c/1806002977/1' }),
+        navigate("WebScreen", { screenName: "Telegram Community",link:'https://t.me/terra_09/1' }),
     },
     // {
     //   name: 'Share app',
